@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Tagged Pointer in iOS前言问题1：下面的代码输出是什么？ 12345678910111213141516__weak NSNumber *weakNumber;__weak NSString *weakString;__weak NSDate *weakDate;__weak NSObject *weakObj;int num &#x3D; 123;@autoreleasepool &amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Tagged Pointer in iOS">
+<meta property="og:url" content="http://yoursite.com/2019/12/18/Tagged%20Pointer%20in%20iOS/index.html">
+<meta property="og:site_name" content="YoloMao的博客">
+<meta property="og:description" content="Tagged Pointer in iOS前言问题1：下面的代码输出是什么？ 12345678910111213141516__weak NSNumber *weakNumber;__weak NSString *weakString;__weak NSDate *weakDate;__weak NSObject *weakObj;int num &#x3D; 123;@autoreleasepool &amp;#">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2019/12/23/VgFw2tWqhKzneH6.png">
+<meta property="og:image" content="https://i.loli.net/2019/12/20/4Unysd2SD3Kr8of.png">
+<meta property="article:published_time" content="2019-12-18T09:04:29.014Z">
+<meta property="article:modified_time" content="2019-12-23T06:54:42.541Z">
+<meta property="article:author" content="YoloMao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2019/12/23/VgFw2tWqhKzneH6.png">
+
+<link rel="canonical" href="http://yoursite.com/2019/12/18/Tagged%20Pointer%20in%20iOS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Tagged Pointer in iOS | YoloMao的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">YoloMao的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/12/18/Tagged%20Pointer%20in%20iOS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="YoloMao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YoloMao的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Tagged Pointer in iOS
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-18 17:04:29" itemprop="dateCreated datePublished" datetime="2019-12-18T17:04:29+08:00">2019-12-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-23 14:54:42" itemprop="dateModified" datetime="2019-12-23T14:54:42+08:00">2019-12-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Tagged-Pointer-in-iOS"><a href="#Tagged-Pointer-in-iOS" class="headerlink" title="Tagged Pointer in iOS"></a>Tagged Pointer in iOS</h1><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>问题1：下面的代码输出是什么？</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSNumber</span> *weakNumber;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSString</span> *weakString;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSDate</span> *weakDate;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSObject</span> *weakObj;</span><br><span class="line"><span class="keyword">int</span> num = <span class="number">123</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">    weakObj = [[<span class="built_in">NSObject</span> alloc] init];</span><br><span class="line">    weakNumber = [<span class="built_in">NSNumber</span> numberWithInt:num];</span><br><span class="line">    weakString = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"string%d"</span>, num];</span><br><span class="line">    weakDate   = [<span class="built_in">NSDate</span> dateWithTimeIntervalSince1970:<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakObj is %@"</span>, weakObj);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakNumber is %@"</span>, weakNumber);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakString is %@"</span>, weakString);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakDate is %@"</span>, weakDate);</span><br></pre></td></tr></table></figure>
+
+<a id="more"></a>
+
+<p>问题2：下面的代码1、2会崩溃吗？如何解决？</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_get_global_queue(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">  <span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">    <span class="keyword">self</span>.name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"abcdefghijklmn"</span>];</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//2</span></span><br><span class="line"><span class="built_in">dispatch_queue_t</span> queue = dispatch_get_global_queue(<span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">  <span class="built_in">dispatch_async</span>(queue, ^&#123;</span><br><span class="line">    <span class="keyword">self</span>.name = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"abc"</span>];</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题3：下面的代码1、2会崩溃吗？</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">@interface</span> <span class="title">NSObject</span> (<span class="title">AssociatedObject</span>) </span></span><br><span class="line"><span class="keyword">@property</span> (<span class="keyword">nonatomic</span>, <span class="keyword">assign</span>) <span class="built_in">CGFloat</span> someProperty; </span><br><span class="line"><span class="keyword">@end</span> </span><br><span class="line"><span class="class"><span class="keyword">@implementation</span> <span class="title">NSObject</span> (<span class="title">AssociatedObject</span>) </span></span><br><span class="line"><span class="keyword">@dynamic</span> someProperty; </span><br><span class="line">- (<span class="keyword">void</span>)setSomeProperty:(<span class="built_in">CGFloat</span>)someProperty&#123; </span><br><span class="line">   <span class="keyword">return</span> objc_setAssociatedObject(<span class="keyword">self</span>, <span class="keyword">@selector</span>(someProperty), @(someProperty), OBJC_ASSOCIATION_ASSIGN); </span><br><span class="line">&#125; </span><br><span class="line">- (<span class="built_in">CGFloat</span>)someProperty&#123; </span><br><span class="line">   <span class="keyword">return</span> [objc_getAssociatedObject(<span class="keyword">self</span>, <span class="keyword">@selector</span>(someProperty)) floatValue]; </span><br><span class="line">&#125; </span><br><span class="line"><span class="keyword">@end</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//1</span></span><br><span class="line"><span class="keyword">self</span>.view.someProperty = <span class="number">100</span>;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"%@"</span>, @(<span class="keyword">self</span>.view.someProperty));</span><br><span class="line"></span><br><span class="line"><span class="comment">//2</span></span><br><span class="line"><span class="keyword">self</span>.view.someProperty = <span class="number">100.1</span>;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"%@"</span>, @(<span class="keyword">self</span>.view.someProperty));</span><br></pre></td></tr></table></figure>
+
+<p>带着这3个问题，我们先来了解一下Tagged Pointer这一概念。</p>
+<h3 id="Tagged-Pointer"><a href="#Tagged-Pointer" class="headerlink" title="Tagged Pointer"></a>Tagged Pointer</h3><p>（本篇文章基于<a href="https://opensource.apple.com/source/objc4/objc4-750/" target="_blank" rel="noopener">objc4-750</a>版本，由于objc源码版本更新迭代，部分内容与参考文章有出入。）</p>
+<p>Tagged Pointer这一概念最早是在<a href="https://opensource.apple.com/source/objc4/objc4-493.9/runtime/" target="_blank" rel="noopener">objc4-493.9</a>中出现。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __OBJC2__  &amp;&amp;  __LP64__</span></span><br><span class="line"><span class="comment">// Register a tagged pointer class.</span></span><br><span class="line">OBJC_EXPORT <span class="keyword">void</span> _objc_insert_tagged_isa(<span class="keyword">unsigned</span> <span class="keyword">char</span> slotNumber, Class isa)</span><br><span class="line">    __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_4_3);</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>在64位架构下，普通变量如NSInteger所占用的内存由32位架构下的4字节变成8个字节，NSNumber对象指针由32位架构下的4字节变成8字节，对象指针所指向的内存地址由32位架构下的8字节变成16字节，这带来的内存占用简直是灾难性的。</p>
+<p>所以，从Mac OS X 10.7和iOS 5开始（64位），苹果同步提出了Tagged Pointer这样一个技巧，来优化NSNumber、NSString等对象类型，提升读取速度和减少其内存使用，具体的如唐巧老师这一篇<a href="https://blog.devtang.com/2014/05/30/understand-tagged-pointer/" target="_blank" rel="noopener">文章</a>中写道：</p>
+<blockquote>
+<ol>
+<li>Tagged Pointer专门用来存储小的对象，例如NSNumber和NSDate。</li>
+<li>Tagged Pointer指针的值不再是地址了，而是真正的值。所以，实际上它不再是一个对象了，它只是一个披着对象皮的普通变量而已。所以，它的内存并不存储在堆中，也不需要malloc和free。</li>
+<li>在内存读取上有着3倍的效率，创建时比以前快106倍。</li>
+</ol>
+</blockquote>
+<p>如下图，未引入Tagged Pointer以及引入Tagged Pointer下的内存占用情况：</p>
+<p><img src="https://i.loli.net/2019/12/23/VgFw2tWqhKzneH6.png" alt="Tagged Pointer.jpg"></p>
+<p>(备注：Tagged Pointer的布局随着不同的iOS版本而变化)</p>
+<p>也就是说，当数据作为标记指针被优化时，该指针存储在栈上；没有isa指针，不是一个对象，以Tag + Payload的形式存储，且不需要编译器添加Retain和Release来做内存管理；占用的内存空间约为原来的1/3，读取、创建效率提升明显；如果60bits的payload无法完全表达数据，数据还是将会作为对象指针指向堆上的内存地址的形式存储。</p>
+<p>那上面3个问题的答案就显而易见了：</p>
+<p>问题1：除weakObj为null，其余3个的值都能正常打印。</p>
+<p>问题2：代码1部分将崩溃（如果不崩溃请改为10000），系多线程异步并发执行多次release旧值导致crash，可以通过加锁来解决；代码2不会崩溃，因为对于标记指针将不作内存管理，直接赋值。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">__attribute__((aligned(<span class="number">16</span>)))</span><br><span class="line"><span class="keyword">void</span> </span><br><span class="line">objc_release(<span class="keyword">id</span> obj)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!obj) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">if</span> (obj-&gt;isTaggedPointer()) <span class="keyword">return</span>;</span><br><span class="line">    <span class="keyword">return</span> obj-&gt;release();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>问题3：<a href="[http://zh.wikipedia.org/wiki/%E8%BF%B7%E9%80%94%E6%8C%87%E9%92%88](http://zh.wikipedia.org/wiki/迷途指针)">悬垂指针</a>调用crash，跟问题1的考察点一致，详见<a href="https://juejin.im/post/5bd3e59e51882578247082d3" target="_blank" rel="noopener">问题来源</a>作者的描述。</p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><p>上述3个问题分别来自（侵删），感谢作者：</p>
+<ul>
+<li><a href="https://wenghengcong.com/posts/b6becb26/" target="_blank" rel="noopener">内存管理（二）Tagged Pointer</a> by wenghengcong</li>
+<li><a href="https://juejin.im/post/5c931b59e51d45733067e6b9" target="_blank" rel="noopener">小码哥iOS学习笔记第二十四天:Tagged Pointer</a> by SketchK</li>
+<li><a href="https://juejin.im/post/5bd3e59e51882578247082d3" target="_blank" rel="noopener">由Tagged Pointer联想到的一个问题</a> by 冰凌天</li>
+</ul>
+<p>另外：</p>
+<p><a href="https://blog.devtang.com/2014/05/30/understand-tagged-pointer/" target="_blank" rel="noopener">深入理解Tagged Pointer</a> by 唐巧</p>
+<p><a href="https://www.mikeash.com/pyblog/friday-qa-2012-07-27-lets-build-tagged-pointers.html" target="_blank" rel="noopener">Friday Q&amp;A 2012-07-27:Let’s Build Tagged Pointers</a> by Mike Ash</p>
+<p><a href="https://www.mikeash.com/pyblog/friday-qa-2015-07-31-tagged-pointer-strings.html" target="_blank" rel="noopener">Friday Q&amp;A 2015-07-31:Tagged Pointer Strings</a> by Mike Ash <a href="http://www.cocoachina.com/articles/13449" target="_blank" rel="noopener">翻译</a></p>
+<h3 id="iOS12"><a href="#iOS12" class="headerlink" title="iOS12"></a>iOS12</h3><p>然而，问题并没有结束。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSString</span> *string = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"a"</span>];</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"\n %p %@"</span>, string, [string <span class="keyword">class</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>上述代码在iPhone6s真机(iOS12)下调试，打印为：</p>
+<p><code>0x87c2ce80a4d444ae NSTaggedPointerString</code></p>
+<p>这是什么跟什么？！！等等，按照上文分析以及<a href="https://www.mikeash.com/pyblog/friday-qa-2015-07-31-tagged-pointer-strings.html" target="_blank" rel="noopener">Friday Q&amp;A 2015-07-31:Tagged Pointer Strings</a>里描述的，<code>@&quot;a&quot;</code>的对象指针地址应该是<code>0x?????????????61?</code>才对啊！！不信邪的再次运行：</p>
+<p>0xcc5f2b03900c91ce NSTaggedPointerString</p>
+<p>:slightly_smiling_face:</p>
+<p>变了！！！不得了不得了！</p>
+<p>尝试在iPhone5s模拟器(iOS10)上运行：</p>
+<p><code>0xa000000000000611 NSTaggedPointerString</code></p>
+<p>iPhone5s模拟器(iOS11)：</p>
+<p><code>0xa000000000000611 NSTaggedPointerString</code></p>
+<p>看来问题就出在iOS12上，让我们结合源码来解读。</p>
+<h4 id="initializeTaggedPointerObfuscator"><a href="#initializeTaggedPointerObfuscator" class="headerlink" title="initializeTaggedPointerObfuscator"></a>initializeTaggedPointerObfuscator</h4><p>让我们从源码(<a href="https://opensource.apple.com/source/objc4/objc4-750/runtime/objc-runtime-new.mm.auto.html" target="_blank" rel="noopener">objc4-750 objc-runtime-new.mm</a>)中了解。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/***********************************************************************</span></span><br><span class="line"><span class="comment">* initializeTaggedPointerObfuscator</span></span><br><span class="line"><span class="comment">* Initialize objc_debug_taggedpointer_obfuscator with randomness.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* The tagged pointer obfuscator is intended to make it more difficult</span></span><br><span class="line"><span class="comment">* for an attacker to construct a particular object as a tagged pointer,</span></span><br><span class="line"><span class="comment">* in the presence of a buffer overflow or other write control over some</span></span><br><span class="line"><span class="comment">* memory. The obfuscator is XORed with the tagged pointers when setting</span></span><br><span class="line"><span class="comment">* or retrieving payload values. They are filled with randomness on first</span></span><br><span class="line"><span class="comment">* use.</span></span><br><span class="line"><span class="comment">**********************************************************************/</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">void</span></span><br><span class="line">initializeTaggedPointerObfuscator(<span class="keyword">void</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (sdkIsOlderThan(<span class="number">10</span>_14, <span class="number">12</span>_0, <span class="number">12</span>_0, <span class="number">5</span>_0, <span class="number">3</span>_0) ||</span><br><span class="line">        <span class="comment">// Set the obfuscator to zero for apps linked against older SDKs,</span></span><br><span class="line">        <span class="comment">// in case they're relying on the tagged pointer representation.</span></span><br><span class="line">        DisableTaggedPointerObfuscation) &#123;</span><br><span class="line">        objc_debug_taggedpointer_obfuscator = <span class="number">0</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// Pull random data into the variable, then shift away all non-payload bits.</span></span><br><span class="line">        arc4random_buf(&amp;objc_debug_taggedpointer_obfuscator,</span><br><span class="line">                       <span class="keyword">sizeof</span>(objc_debug_taggedpointer_obfuscator));</span><br><span class="line">        objc_debug_taggedpointer_obfuscator &amp;= ~_OBJC_TAG_MASK;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可以看到，源码中用到了混淆器函数initializeTaggedPointerObfuscator来对标记指针做异或运算处理，以避免攻击者在缓冲区溢出以及其他可写控制内存伪造标记指针。在iOS12.0之前的版本将不做处理。</p>
+<p>Product -&gt; Scheme -&gt; Edit Scheme或者按<code>command + shift + ,</code>(即<code>command + &lt;</code>)，在Arguments添加环境变量(Environment Variables)name为<code>OBJC_DISABLE_TAG_OBFUSCATION</code>，值为<code>YES</code>。</p>
+<p>再次在iPhone6s真机(iOS12)下调试，打印为：</p>
+<p><code>0xa000000000000611 NSTaggedPointerString</code></p>
+<p>正常了！</p>
+<h4 id="源码中其他有意思的地方"><a href="#源码中其他有意思的地方" class="headerlink" title="源码中其他有意思的地方"></a>源码中其他有意思的地方</h4><h5 id="LP64"><a href="#LP64" class="headerlink" title="__LP64__"></a>__LP64__</h5><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __LP64__</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> OBJC_HAVE_TAGGED_POINTERS 1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>在为64位运行时进行编译时，编译器定义<a href="https://stackoverflow.com/questions/18861046/how-to-determine-if-compiling-for-64-bit-ios-in-xcode" target="_blank" rel="noopener">__LP64__</a>宏。这里通过__LP64__宏来判断是否有标记指针。</p>
+<h5 id="MSB和LSB"><a href="#MSB和LSB" class="headerlink" title="MSB和LSB"></a>MSB和LSB</h5><figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> (TARGET_OS_OSX || TARGET_OS_IOSMAC) &amp;&amp; __x86_64__</span></span><br><span class="line">    <span class="comment">// 64-bit Mac - tag bit is LSB</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> OBJC_MSB_TAGGED_POINTERS 0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line">    <span class="comment">// Everything else - tag bit is MSB</span></span><br><span class="line"><span class="meta">#   <span class="meta-keyword">define</span> OBJC_MSB_TAGGED_POINTERS 1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+<p>MSB(Most Significant Bit)：最高有效位，对数值的影响最大；LSB(Least Significant Bit)：最低有效位。参考：<a href="https://www.cnblogs.com/lingyejun/p/8312838.html" target="_blank" rel="noopener">清晰讲解LSB、MSB和大小端模式及网络字节序</a>。这里对标记指针的内部空间分配进行管理，在Mac上调试，字符串<code>@&quot;a&quot;</code>的标记指针地址为<code>0x6115</code>，tag和tag index从最低有效位开始；iPhone上调试，tag和tag index从最高有效位开始，如下图所示，<code>1010</code>即tag + tag index(<code>OBJC_TAG_NSString = 2</code>)。</p>
+<p><img src="https://i.loli.net/2019/12/20/4Unysd2SD3Kr8of.png" alt="WX20191220-113101@2x.png"></p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  ||  __cplusplus &gt;= 201103L</span></span><br><span class="line"><span class="keyword">enum</span> objc_tag_index_t : uint16_t</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="keyword">typedef</span> uint16_t objc_tag_index_t;</span><br><span class="line"><span class="keyword">enum</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 60-bit payloads</span></span><br><span class="line">    OBJC_TAG_NSAtom            = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_1                 = <span class="number">1</span>, </span><br><span class="line">    OBJC_TAG_NSString          = <span class="number">2</span>, </span><br><span class="line">    OBJC_TAG_NSNumber          = <span class="number">3</span>, </span><br><span class="line">    OBJC_TAG_NSIndexPath       = <span class="number">4</span>, </span><br><span class="line">    OBJC_TAG_NSManagedObjectID = <span class="number">5</span>, </span><br><span class="line">    OBJC_TAG_NSDate            = <span class="number">6</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 60-bit reserved</span></span><br><span class="line">    OBJC_TAG_RESERVED_7        = <span class="number">7</span>, </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 52-bit payloads</span></span><br><span class="line">    OBJC_TAG_Photos_1          = <span class="number">8</span>,</span><br><span class="line">    OBJC_TAG_Photos_2          = <span class="number">9</span>,</span><br><span class="line">    OBJC_TAG_Photos_3          = <span class="number">10</span>,</span><br><span class="line">    OBJC_TAG_Photos_4          = <span class="number">11</span>,</span><br><span class="line">    OBJC_TAG_XPC_1             = <span class="number">12</span>,</span><br><span class="line">    OBJC_TAG_XPC_2             = <span class="number">13</span>,</span><br><span class="line">    OBJC_TAG_XPC_3             = <span class="number">14</span>,</span><br><span class="line">    OBJC_TAG_XPC_4             = <span class="number">15</span>,</span><br><span class="line"></span><br><span class="line">    OBJC_TAG_First60BitPayload = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_Last60BitPayload  = <span class="number">6</span>, </span><br><span class="line">    OBJC_TAG_First52BitPayload = <span class="number">8</span>, </span><br><span class="line">    OBJC_TAG_Last52BitPayload  = <span class="number">263</span>, </span><br><span class="line"></span><br><span class="line">    OBJC_TAG_RESERVED_264      = <span class="number">264</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  &amp;&amp;  !defined(__cplusplus)</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> objc_tag_index_t objc_tag_index_t;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>如有补充，日后再说。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/17/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/" rel="prev" title="测试任意指针是否为有效的Objective-C对象">
+      <i class="fa fa-chevron-left"></i> 测试任意指针是否为有效的Objective-C对象
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Tagged-Pointer-in-iOS"><span class="nav-number">1.</span> <span class="nav-text">Tagged Pointer in iOS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.0.1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Tagged-Pointer"><span class="nav-number">1.0.2.</span> <span class="nav-text">Tagged Pointer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.0.3.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#iOS12"><span class="nav-number">1.0.4.</span> <span class="nav-text">iOS12</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#initializeTaggedPointerObfuscator"><span class="nav-number">1.0.4.1.</span> <span class="nav-text">initializeTaggedPointerObfuscator</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#源码中其他有意思的地方"><span class="nav-number">1.0.4.2.</span> <span class="nav-text">源码中其他有意思的地方</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#LP64"><span class="nav-number">1.0.4.2.1.</span> <span class="nav-text">__LP64__</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#MSB和LSB"><span class="nav-number">1.0.4.2.2.</span> <span class="nav-text">MSB和LSB</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YoloMao"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">YoloMao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YoloMao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.6.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
