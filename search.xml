@@ -2,7 +2,7 @@
 <search>
   <entry>
     <title>Tagged Pointer in iOS</title>
-    <url>/uncategorized/Tagged%20Pointer%20in%20iOS/</url>
+    <url>/iOS/Tagged%20Pointer%20in%20iOS/</url>
     <content><![CDATA[<h1 id="Tagged-Pointer-in-iOS"><a href="#Tagged-Pointer-in-iOS" class="headerlink" title="Tagged Pointer in iOS"></a>Tagged Pointer in iOS</h1><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>问题1：下面的代码输出是什么？</p>
 <figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSNumber</span> *weakNumber;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSString</span> *weakString;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSDate</span> *weakDate;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSObject</span> *weakObj;</span><br><span class="line"><span class="keyword">int</span> num = <span class="number">123</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">    weakObj = [[<span class="built_in">NSObject</span> alloc] init];</span><br><span class="line">    weakNumber = [<span class="built_in">NSNumber</span> numberWithInt:num];</span><br><span class="line">    weakString = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"string%d"</span>, num];</span><br><span class="line">    weakDate   = [<span class="built_in">NSDate</span> dateWithTimeIntervalSince1970:<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakObj is %@"</span>, weakObj);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakNumber is %@"</span>, weakNumber);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakString is %@"</span>, weakString);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakDate is %@"</span>, weakDate);</span><br></pre></td></tr></table></figure>
 
@@ -86,7 +86,7 @@
   </entry>
   <entry>
     <title>测试任意指针是否为有效的Objective-C对象</title>
-    <url>/uncategorized/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/</url>
+    <url>/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/</url>
     <content><![CDATA[<p>#测试任意指针是否为有效的Objective-C对象</p>
 <p>翻译自：<a href="https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/" target="_blank" rel="noopener">https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/</a></p>
 <p>仅供学习交流，侵删。</p>
@@ -188,7 +188,7 @@
   </entry>
   <entry>
     <title>Aspects解读（一）</title>
-    <url>/uncategorized/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/</url>
+    <url>/iOS/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/</url>
     <content><![CDATA[<h1 id="Aspects解读（一）"><a href="#Aspects解读（一）" class="headerlink" title="Aspects解读（一）"></a>Aspects解读（一）</h1><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>Aspects是一个基于runtime运行时实现的轻量级AOP编程库，整个库代码不足千行，但干货满满。</p>
 <p>阅读本文前，希望你具备：</p>
 <p>1.看过Block源码</p>

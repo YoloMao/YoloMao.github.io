@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+<style>
+    .pace .pace-progress {
+        background: #1E92FB; /*进度条颜色*/
+        height: 3px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 10px #1E92FB, 0 0 5px     #1E92FB; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #1E92FB;    /*上边框颜色*/
+        border-left-color: #1E92FB;    /*左边框颜色*/
+    }
+</style>
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="#测试任意指针是否为有效的Objective-C对象 翻译自：https:&#x2F;&#x2F;blog.timac.org&#x2F;2016&#x2F;1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object&#x2F; 仅供学习交流，侵删。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="测试任意指针是否为有效的Objective-C对象">
+<meta property="og:url" content="http://yoursite.com/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/index.html">
+<meta property="og:site_name" content="YoloMao的博客">
+<meta property="og:description" content="#测试任意指针是否为有效的Objective-C对象 翻译自：https:&#x2F;&#x2F;blog.timac.org&#x2F;2016&#x2F;1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object&#x2F; 仅供学习交流，侵删。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2019/12/17/4wyCSTl1iHesEIY.png">
+<meta property="og:image" content="https://i.loli.net/2019/12/18/xtROaqd3iEQ8jDh.png">
+<meta property="article:published_time" content="2019-12-17T09:52:45.787Z">
+<meta property="article:modified_time" content="2019-12-23T07:42:16.502Z">
+<meta property="article:author" content="YoloMao">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2019/12/17/4wyCSTl1iHesEIY.png">
+
+<link rel="canonical" href="http://yoursite.com/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>测试任意指针是否为有效的Objective-C对象 | YoloMao的博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">YoloMao的博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/uploads/avatar.png">
+      <meta itemprop="name" content="YoloMao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="YoloMao的博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          测试任意指针是否为有效的Objective-C对象
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-17 17:52:45" itemprop="dateCreated datePublished" datetime="2019-12-17T17:52:45+08:00">2019-12-17</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-23 15:42:16" itemprop="dateModified" datetime="2019-12-23T15:42:16+08:00">2019-12-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>#测试任意指针是否为有效的Objective-C对象</p>
+<p>翻译自：<a href="https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/" target="_blank" rel="noopener">https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/</a></p>
+<p>仅供学习交流，侵删。</p>
+<a id="more"></a>
+
+<h2 id="以下为正文内容："><a href="#以下为正文内容：" class="headerlink" title="以下为正文内容："></a>以下为正文内容：</h2><p>假设你随机选取一个指针，我们能否知道它是否指向有效的Objective-C对象？当然不能有崩溃。。。emm，没有简单的解决方案。在这篇文章中，我给出了64位结构的解决方案。其提供的代码只在具有modern Objective-C运行时的macOS10.12.1和iOS10.1.1上测试过。</p>
+<p>没有太多关于这个问题的文档。这里有一篇来自<a href="https://www.cocoawithlove.com/2010/10/testing-if-arbitrary-pointer-is-valid.html" target="_blank" rel="noopener">Matt Gallagher</a>的文章，写于2010年，但其中的内容已经过时且可能不能够正常使用。本文的大部分信息来自于：</p>
+<p><a href="https://opensource.apple.com/source/objc4/objc4-706/" target="_blank" rel="noopener">objc4-706 from macOS10.12</a></p>
+<p><a href="http://lldb.llvm.org/source.html" target="_blank" rel="noopener">LLDB git repository(November 2016)</a></p>
+<p>###免责声明</p>
+<p>本文的内容以及源代码依赖于Objective-C运行时的内部结构。对其正确性无法保证，并可能会随着macOS/iOS的更新而破坏。不要在实际App中使用这代码！</p>
+<p>实际上我刚刚开始是基于objc4-680(mac OS 10.11.6)源码写这篇文章。但在发布前，苹果发布了objc4-706(macOS 10.12)的源码。正如下方图片所见，一些依赖的内部结构发生了改变：</p>
+<p><img src="https://i.loli.net/2019/12/17/4wyCSTl1iHesEIY.png" alt="objc4-680_objc4-706.png"></p>
+<h3 id="什么是指针？"><a href="#什么是指针？" class="headerlink" title="什么是指针？"></a>什么是指针？</h3><p>指针是引用某个内存地址的整数。然而，在iOS和macOS上，有2种指针：普通指针和标记指针。让我们开始解决标记指针的问题。</p>
+<h3 id="标记指针"><a href="#标记指针" class="headerlink" title="标记指针"></a>标记指针</h3><p>在iOS7和Mac OS X 10.7 64位架构，引进了标记指针。带标记的指针是一种特殊的指针，其数据直接存储在该指针中，而不是通过内存分配。其具有明显的性能优势。</p>
+<p>标记指针在objc-internal.h中声明。在macOS 10.11以及更早的版本中，标记指针较为简单：</p>
+<ul>
+<li><p>60位的有效载荷</p>
+</li>
+<li><p>3位的标记索引</p>
+</li>
+<li><p>1位用来辨别标记指针对象或普通对象</p>
+</li>
+</ul>
+<p>在macOS 10.12，标记指针布局已更改为还支持52位有效载荷和更多的标记索引：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Tag indexes 0..&lt;7 have a 60-bit payload.</span></span><br><span class="line"><span class="comment">// Tag index 7 is reserved.</span></span><br><span class="line"><span class="comment">// Tag indexes 8..&lt;264 have a 52-bit payload.</span></span><br><span class="line"><span class="comment">// Tag index 264 is reserved.</span></span><br></pre></td></tr></table></figure>
+
+<p>标记索引告诉您标记指针所表示的类：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    OBJC_TAG_NSAtom            = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_1                 = <span class="number">1</span>, </span><br><span class="line">    OBJC_TAG_NSString          = <span class="number">2</span>, </span><br><span class="line">    OBJC_TAG_NSNumber          = <span class="number">3</span>, </span><br><span class="line">    OBJC_TAG_NSIndexPath       = <span class="number">4</span>, </span><br><span class="line">    OBJC_TAG_NSManagedObjectID = <span class="number">5</span>, </span><br><span class="line">    OBJC_TAG_NSDate            = <span class="number">6</span>, </span><br><span class="line">    OBJC_TAG_RESERVED_7        = <span class="number">7</span>, </span><br><span class="line"> </span><br><span class="line">    OBJC_TAG_First60BitPayload = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_Last60BitPayload  = <span class="number">6</span>, </span><br><span class="line">    OBJC_TAG_First52BitPayload = <span class="number">8</span>, </span><br><span class="line">    OBJC_TAG_Last52BitPayload  = <span class="number">263</span>, </span><br><span class="line"> </span><br><span class="line">    OBJC_TAG_RESERVED_264      = <span class="number">264</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>使用声明在objc-internal.h中的函数，检查指针是否为标记指针很简单：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">bool</span></span><br><span class="line">_objc_isTaggedPointer(<span class="keyword">const</span> <span class="keyword">void</span> *ptr) </span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> ((intptr_t)ptr &amp; _OBJC_TAG_MASK) == _OBJC_TAG_MASK;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">static</span> <span class="keyword">inline</span> objc_tag_index_t </span><br><span class="line">_objc_getTaggedPointerTag(<span class="keyword">const</span> <span class="keyword">void</span> *ptr) </span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// assert(_objc_isTaggedPointer(ptr));</span></span><br><span class="line">    uintptr_t basicTag = ((uintptr_t)ptr &gt;&gt; _OBJC_TAG_INDEX_SHIFT) &amp; _OBJC_TAG_INDEX_MASK;</span><br><span class="line">    uintptr_t extTag =   ((uintptr_t)ptr &gt;&gt; _OBJC_TAG_EXT_INDEX_SHIFT) &amp; _OBJC_TAG_EXT_INDEX_MASK;</span><br><span class="line">    <span class="keyword">if</span> (basicTag == _OBJC_TAG_INDEX_MASK) &#123;</span><br><span class="line">        <span class="keyword">return</span> (objc_tag_index_t)(extTag + OBJC_TAG_First52BitPayload);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> (objc_tag_index_t)basicTag;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>遗憾的是，这些函数是静态内联函数，没有对外开放，我们别无选择，只能在代码中复制以实现。</p>
+<p>另一方面，获取给定标记所注册的类的函数是对外的，可以使用。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> Returns the registered class for the given tag.</span></span><br><span class="line"><span class="comment"> Returns nil if the tag is valid but has no registered class.</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment"> This function searches the exported function: _objc_getClassForTag(objc_tag_index_t tag)</span></span><br><span class="line"><span class="comment"> declared in https://opensource.apple.com/source/objc4/objc4-706/runtime/objc-internal.h</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> Class _objc_getClassForTag(objc_tag_index_t tag)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">bool</span> _objc_getClassForTag_searched = <span class="literal">false</span>;</span><br><span class="line">    <span class="keyword">static</span> Class (*_objc_getClassForTag_func)(objc_tag_index_t) = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">if</span>(!_objc_getClassForTag_searched)</span><br><span class="line">    &#123;</span><br><span class="line">        _objc_getClassForTag_func = (Class(*)(objc_tag_index_t))dlsym(RTLD_DEFAULT, <span class="string">"_objc_getClassForTag"</span>);</span><br><span class="line">        _objc_getClassForTag_searched = <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">if</span>(_objc_getClassForTag_func == <span class="literal">NULL</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            fprintf(stderr, <span class="string">"*** Could not find _objc_getClassForTag()!\n"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span>(_objc_getClassForTag_func != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> _objc_getClassForTag_func(tag);</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>现在，很容易创建一个函数来检查指针是否是标记指针，从而是有效的Objective-C对象：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> Test if a pointer is a tagged pointer</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment"> @param inPtr is the pointer to check</span></span><br><span class="line"><span class="comment"> @param outClass returns the registered class for the tagged pointer.</span></span><br><span class="line"><span class="comment"> @return true if the pointer is a tagged pointer.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">bool</span> IsObjcTaggedPointer(<span class="keyword">const</span> <span class="keyword">void</span> *inPtr, Class *outClass)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">bool</span> isTaggedPointer = _objc_isTaggedPointer(inPtr);</span><br><span class="line">    <span class="keyword">if</span>(outClass != <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(isTaggedPointer)</span><br><span class="line">        &#123;</span><br><span class="line">            objc_tag_index_t tagIndex = _objc_getTaggedPointerTag(inPtr);</span><br><span class="line">            *outClass = _objc_getClassForTag(tagIndex);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            *outClass = <span class="literal">NULL</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">return</span> isTaggedPointer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果你想了解更多关于标记指针你可以阅读下面2篇来自Mike Ash的文章：</p>
+<p><a href="https://www.mikeash.com/pyblog/friday-qa-2013-09-27-arm64-and-you.html" target="_blank" rel="noopener">Friday Q&amp;A 2013-09-27:ARM64 and You</a></p>
+<p><a href="https://www.mikeash.com/pyblog/friday-qa-2012-07-27-lets-build-tagged-pointers.html" target="_blank" rel="noopener">Friday Q&amp;A 2012-07-27:Let’s Build Tagged Pointers</a></p>
+<h3 id="校验"><a href="#校验" class="headerlink" title="校验"></a>校验</h3><p>有效指针必须与指针大小对齐。尝试在<a href="http://llvm.org/svn/llvm-project/lldb/trunk/examples/summaries/cocoa/objc_runtime.py" target="_blank" rel="noopener">objc_runtime.py</a>中的python函数<code>is_valid_pointer</code>中打印指针时，将在LLDB中进行此类检查：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">@staticmethod</span><br><span class="line">def is_valid_pointer(pointer, pointer_size, allow_tagged=<span class="number">0</span>, allow_NULL=<span class="number">0</span>):</span><br><span class="line">    logger = lldb.formatters.Logger.Logger()</span><br><span class="line">    <span class="keyword">if</span> pointer is None:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">    <span class="keyword">if</span> pointer == <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">return</span> allow_NULL</span><br><span class="line">    <span class="keyword">if</span> allow_tagged and (pointer % <span class="number">2</span>) == <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span></span><br><span class="line">    <span class="keyword">return</span> ((pointer % pointer_size) == <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>最后的检查验证指针是否与指针大小对齐。我们可以实现相同的检查：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (((uintptr_t)inPtr % <span class="keyword">sizeof</span>(uintptr_t)) != <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="位的使用"><a href="#位的使用" class="headerlink" title="位的使用"></a>位的使用</h3><p>LLDB源码在objc_runtime.py中还有一个有趣的函数：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># Objective-C runtime has a rule that pointers <span class="keyword">in</span> a class_t will only have bits <span class="number">0</span> thru <span class="number">46</span> set</span><br><span class="line"><span class="meta"># so <span class="meta-keyword">if</span> any pointer has bits 47 thru 63 high we know that this is not a</span></span><br><span class="line"><span class="meta"># valid isa</span></span><br><span class="line">@staticmethod</span><br><span class="line">def is_allowed_pointer(pointer):</span><br><span class="line">    logger = lldb.formatters.Logger.Logger()</span><br><span class="line">    <span class="keyword">if</span> pointer is None:</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span></span><br><span class="line">    <span class="keyword">return</span> ((pointer &amp; <span class="number">0xFFFF800000000000</span>) == <span class="number">0</span>)</span><br></pre></td></tr></table></figure>
+
+<p>同样，我们可以轻松实现相同的检查：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(((uintptr_t)inPtr &amp; <span class="number">0xFFFF800000000000</span>) != <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="有效可读的内存"><a href="#有效可读的内存" class="headerlink" title="有效可读的内存"></a>有效可读的内存</h3><p>为了有效，指针应该指向有效可读的内存。我们可以用<code>vm_region_64()</code>来确保内存可读，<code>vm_read()</code>确保内存有效：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> Test if the pointer points to readable and valid memory.</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment"> @param inPtr is the pointer</span></span><br><span class="line"><span class="comment"> @return true if the pointer points to readable and valid memory.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">bool</span> IsValidReadableMemory(<span class="keyword">const</span> <span class="keyword">void</span> *inPtr)</span><br><span class="line">&#123;</span><br><span class="line">    kern_return_t error = KERN_SUCCESS;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">// Check for read permissions</span></span><br><span class="line">    <span class="keyword">bool</span> hasReadPermissions = <span class="literal">false</span>;</span><br><span class="line">     </span><br><span class="line">    vm_size_t vmsize;</span><br><span class="line">    vm_address_t address = (vm_address_t)inPtr;</span><br><span class="line">    vm_region_basic_info_data_t info;</span><br><span class="line">    mach_msg_type_number_t info_count = VM_REGION_BASIC_INFO_COUNT_64;</span><br><span class="line"> </span><br><span class="line">    memory_object_name_t object;</span><br><span class="line"> </span><br><span class="line">    error = vm_region_64(mach_task_self(), &amp;address, &amp;vmsize, VM_REGION_BASIC_INFO, (vm_region_info_t)&amp;info, &amp;info_count, &amp;object);</span><br><span class="line">    <span class="keyword">if</span>(error != KERN_SUCCESS)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// vm_region/vm_region_64 returned an error</span></span><br><span class="line">        hasReadPermissions = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        hasReadPermissions = (info.protection &amp; VM_PROT_READ);</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span>(!hasReadPermissions)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">// Read the memory</span></span><br><span class="line">    vm_offset_t readMem = <span class="number">0</span>;</span><br><span class="line">    mach_msg_type_number_t size = <span class="number">0</span>;</span><br><span class="line">    error = vm_read(mach_task_self(), (vm_address_t)inPtr, <span class="keyword">sizeof</span>(uintptr_t), &amp;readMem, &amp;size);</span><br><span class="line">    <span class="keyword">if</span>(error != KERN_SUCCESS)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// vm_read returned an error</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="验证isa指针并获取Class指针"><a href="#验证isa指针并获取Class指针" class="headerlink" title="验证isa指针并获取Class指针"></a>验证isa指针并获取Class指针</h3><p>现在我们知道当前地址指向有效可读的内存，我们可以提取可能的isa指针并获取Class指针。由Greg Parker在[[objc explain]:Non_pointer isa](<a href="http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html)中记录到：" target="_blank" rel="noopener">http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html)中记录到：</a></p>
+<blockquote>
+<p><em>If you are writing a debugger-like tool, the Objective-C runtime exports some variables to help decode isa fields. objc_debug_isa_class_mask describes which bits are the class pointer: (isa &amp; class_mask) == class pointer. objc_debug_isa_magic_mask and objc_debug_isa_magic_value describe some bits that help distinguish valid isa fields from other invalid values: (isa &amp; magic_mask) == magic_value for isa fields that are not raw class pointers. These variables may change in the future so do not use them in application code.</em></p>
+</blockquote>
+<p>以下是验证isa指针并提取Class指针的实现：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">uintptr_t isa = (*(uintptr_t *)inPtr);</span><br><span class="line">Class ptrClass = <span class="literal">NULL</span>;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span> ((isa &amp; ~ISA_MASK) == <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">    ptrClass = (Class)isa;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> ((isa &amp; ISA_MAGIC_MASK) == ISA_MAGIC_VALUE)</span><br><span class="line">    &#123;</span><br><span class="line">        ptrClass = (Class)(isa &amp; ISA_MASK);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        ptrClass = (Class)isa;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span>(ptrClass == <span class="literal">NULL</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="验证Class是否存在"><a href="#验证Class是否存在" class="headerlink" title="验证Class是否存在"></a>验证Class是否存在</h3><p>现在我们获取到了Class，我们可以检查Objective-C运行时是否知道它：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">bool</span> isKnownClass = <span class="literal">false</span>;</span><br><span class="line"> </span><br><span class="line"><span class="keyword">unsigned</span> <span class="keyword">int</span> numClasses = <span class="number">0</span>;</span><br><span class="line">Class *classesList = objc_copyClassList(&amp;numClasses);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numClasses; i++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (classesList[i] == ptrClass)</span><br><span class="line">    &#123;</span><br><span class="line">        isKnownClass = <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">free(classesList);</span><br><span class="line"> </span><br><span class="line"><span class="keyword">if</span>(!isKnownClass)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="过滤掉一些误报"><a href="#过滤掉一些误报" class="headerlink" title="过滤掉一些误报"></a>过滤掉一些误报</h3><p>Greg Parker提供了一个<a href="https://twitter.com/gparker/status/801894068502433792" target="_blank" rel="noopener">好技巧</a>，通过检查指针分配的大小是否大于类实例的大小来过滤掉一些误报：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">size_t pointerSize = malloc_size(inPtr);</span><br><span class="line"><span class="keyword">if</span>(pointerSize &gt; <span class="number">0</span> &amp;&amp; pointerSize &lt; class_getInstanceSize(ptrClass))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>现在，我们拥有了用于构建一个函数的所有元素，该函数返回一个布尔值，该布尔值指示指针是否为Objective-C对象：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> Test if a pointer is an Objective-C object</span></span><br><span class="line"><span class="comment"> </span></span><br><span class="line"><span class="comment"> @param inPtr is the pointer to check</span></span><br><span class="line"><span class="comment"> @return true if the pointer is an Objective-C object</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">bool</span> IsObjcObject(<span class="keyword">const</span> <span class="keyword">void</span> *inPtr)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// NULL pointer is not an Objective-C object</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">if</span>(inPtr == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Check for tagged pointers</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">if</span>(IsObjcTaggedPointer(inPtr, <span class="literal">NULL</span>))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Check if the pointer is aligned</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">if</span> (((uintptr_t)inPtr % <span class="keyword">sizeof</span>(uintptr_t)) != <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// From LLDB:</span></span><br><span class="line">    <span class="comment">// Objective-C runtime has a rule that pointers in a class_t will only have bits 0 thru 46 set</span></span><br><span class="line">    <span class="comment">// so if any pointer has bits 47 thru 63 high we know that this is not a valid isa</span></span><br><span class="line">    <span class="comment">// See http://llvm.org/svn/llvm-project/lldb/trunk/examples/summaries/cocoa/objc_runtime.py</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">if</span>(((uintptr_t)inPtr &amp; <span class="number">0xFFFF800000000000</span>) != <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Check if the memory is valid and readable</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">if</span>(!IsValidReadableMemory(inPtr))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Get the Class from the pointer</span></span><br><span class="line">    <span class="comment">// From http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html :</span></span><br><span class="line">    <span class="comment">// If you are writing a debugger-like tool, the Objective-C runtime exports some variables</span></span><br><span class="line">    <span class="comment">// to help decode isa fields. objc_debug_isa_class_mask describes which bits are the class pointer:</span></span><br><span class="line">    <span class="comment">// (isa &amp; class_mask) == class pointer.</span></span><br><span class="line">    <span class="comment">// objc_debug_isa_magic_mask and objc_debug_isa_magic_value describe some bits that help</span></span><br><span class="line">    <span class="comment">// distinguish valid isa fields from other invalid values:</span></span><br><span class="line">    <span class="comment">// (isa &amp; magic_mask) == magic_value for isa fields that are not raw class pointers.</span></span><br><span class="line">    <span class="comment">// These variables may change in the future so do not use them in application code.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">     </span><br><span class="line">    uintptr_t isa = (*(uintptr_t *)inPtr);</span><br><span class="line">    Class ptrClass = <span class="literal">NULL</span>;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span> ((isa &amp; ~ISA_MASK) == <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        ptrClass = (Class)isa;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> ((isa &amp; ISA_MAGIC_MASK) == ISA_MAGIC_VALUE)</span><br><span class="line">        &#123;</span><br><span class="line">            ptrClass = (Class)(isa &amp; ISA_MASK);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            ptrClass = (Class)isa;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span>(ptrClass == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// Verifies that the found Class is a known class.</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="keyword">bool</span> isKnownClass = <span class="literal">false</span>;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> numClasses = <span class="number">0</span>;</span><br><span class="line">    Class *classesList = objc_copyClassList(&amp;numClasses);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numClasses; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (classesList[i] == ptrClass)</span><br><span class="line">        &#123;</span><br><span class="line">            isKnownClass = <span class="literal">true</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    free(classesList);</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">if</span>(!isKnownClass)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">     </span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// From Greg Parker</span></span><br><span class="line">    <span class="comment">// https://twitter.com/gparker/status/801894068502433792</span></span><br><span class="line">    <span class="comment">// You can filter out some false positives by checking malloc_size(obj) &gt;= class_getInstanceSize(cls).</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    size_t pointerSize = malloc_size(inPtr);</span><br><span class="line">    <span class="keyword">if</span>(pointerSize &gt; <span class="number">0</span> &amp;&amp; pointerSize &lt; class_getInstanceSize(ptrClass))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">     </span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>为了测试此功能，我构建了一个简单的iOS应用来检查各种指针。这是在iOS 10.1.1（64位）上运行时的输出：</p>
+<p><img src="https://i.loli.net/2019/12/18/xtROaqd3iEQ8jDh.png" alt="tests.png"></p>
+<h3 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h3><p><a href="https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/IsObjcObject.c" target="_blank" rel="noopener">IsObjcObject.c</a></p>
+<p><a href="https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/IsObjcObject.zip" target="_blank" rel="noopener">Sources of the test app</a></p>
+<h3 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h3><ul>
+<li><p><a href="https://opensource.apple.com/source/objc4/objc4-706/" target="_blank" rel="noopener">objc4-706</a> from macOS 10.12</p>
+</li>
+<li><p><a href="https://lldb.llvm.org/resources/contributing.html" target="_blank" rel="noopener">LLDB git repository</a>(November 2016)</p>
+</li>
+<li><p><a href="https://www.cocoawithlove.com/2010/10/testing-if-arbitrary-pointer-is-valid.html" target="_blank" rel="noopener">Testing if an arbitrary pointer is valid object pointer</a> from Matt Gallagher</p>
+</li>
+<li><p><a href="https://www.mikeash.com/pyblog/friday-qa-2013-09-27-arm64-and-you.html" target="_blank" rel="noopener">Friday Q&amp;A 2013-09-27:ARM64 and You</a> from Mike Ash</p>
+</li>
+<li><p><a href="https://www.mikeash.com/pyblog/friday-qa-2012-07-27-lets-build-tagged-pointers.html" target="_blank" rel="noopener">Friday Q&amp;A 2012-07-27:Let’s Build Tagged Pointers</a> from Mike Ash</p>
+</li>
+<li><p>[[objc explain]:Non_pointer isa](<a href="http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html" target="_blank" rel="noopener">http://www.sealiesoftware.com/blog/archive/2013/09/24/objc_explain_Non-pointer_isa.html</a>) from Greg Parker</p>
+</li>
+</ul>
+<h3 id="更新"><a href="#更新" class="headerlink" title="更新"></a>更新</h3><p>2016.11.24：根据Greg Parker的反馈进行了2处更改：</p>
+<ul>
+<li>过滤掉一些误报</li>
+<li>使用<code>objc_copyClassList()</code>来代替<code>objc_getClassList()</code></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/iOS/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/" rel="prev" title="Aspects解读（一）">
+      <i class="fa fa-chevron-left"></i> Aspects解读（一）
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/iOS/Tagged%20Pointer%20in%20iOS/" rel="next" title="Tagged Pointer in iOS">
+      Tagged Pointer in iOS <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#以下为正文内容："><span class="nav-number">1.</span> <span class="nav-text">以下为正文内容：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#什么是指针？"><span class="nav-number">1.1.</span> <span class="nav-text">什么是指针？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#标记指针"><span class="nav-number">1.2.</span> <span class="nav-text">标记指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#校验"><span class="nav-number">1.3.</span> <span class="nav-text">校验</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#位的使用"><span class="nav-number">1.4.</span> <span class="nav-text">位的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#有效可读的内存"><span class="nav-number">1.5.</span> <span class="nav-text">有效可读的内存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#验证isa指针并获取Class指针"><span class="nav-number">1.6.</span> <span class="nav-text">验证isa指针并获取Class指针</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#验证Class是否存在"><span class="nav-number">1.7.</span> <span class="nav-text">验证Class是否存在</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#过滤掉一些误报"><span class="nav-number">1.8.</span> <span class="nav-text">过滤掉一些误报</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">1.9.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#测试"><span class="nav-number">1.10.</span> <span class="nav-text">测试</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下载"><span class="nav-number">1.11.</span> <span class="nav-text">下载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考"><span class="nav-number">1.12.</span> <span class="nav-text">参考</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新"><span class="nav-number">1.13.</span> <span class="nav-text">更新</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="YoloMao"
+      src="/uploads/avatar.png">
+  <p class="site-author-name" itemprop="name">YoloMao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YoloMao</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.6.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
