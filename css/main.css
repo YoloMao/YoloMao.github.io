@@ -157,7 +157,7 @@ body {
 body {
   background: #eee;
   color: #555;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Lato', "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei", sans-serif;
   font-size: 1em;
   line-height: 2;
 }
@@ -173,7 +173,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Lato', "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei", sans-serif;
   font-weight: bold;
   line-height: 1.5;
   margin: 20px 0 15px;
@@ -263,7 +263,7 @@ kbd {
 table {
   border-collapse: collapse;
   border-spacing: 0;
-  font-size: 0.875em;
+  font-size: 0.5em;
   margin: 0 0 20px 0;
   width: 100%;
 }
@@ -299,7 +299,7 @@ td {
   border-radius: 2px;
   color: #555;
   display: inline-block;
-  font-size: 0.875em;
+  font-size: 0.5em;
   line-height: 2;
   padding: 0 20px;
   text-decoration: none;
@@ -373,7 +373,7 @@ pre {
 }
 pre,
 code {
-  font-family: consolas, Menlo, monospace, "PingFang SC", "Microsoft YaHei";
+  font-family: consolas, Menlo, monospace, "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei";
 }
 code {
   background: #eee;
@@ -403,7 +403,7 @@ code {
 .highlight figcaption {
   background: #eee;
   color: #4d4d4c;
-  font-size: 0.875em;
+  font-size: 0.5em;
   line-height: 1.2;
   padding: 0.5em;
 }
@@ -453,7 +453,7 @@ pre {
 pre code {
   background: none;
   color: #4d4d4c;
-  font-size: 0.875em;
+  font-size: 0.5em;
   padding: 0;
   text-shadow: none;
 }
@@ -964,7 +964,7 @@ pre .javascript .function {
   border-bottom: none;
   color: #fff;
   display: inline-block;
-  line-height: 1.375em;
+  line-height: 1.125em;
   padding: 0 40px;
   position: relative;
 }
@@ -973,15 +973,15 @@ pre .javascript .function {
 }
 .site-title {
   display: inline-block;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 1.375em;
+  font-family: 'Lato', "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei", sans-serif;
+  font-size: 1.125em;
   font-weight: normal;
   line-height: 1.5;
   vertical-align: top;
 }
 .site-subtitle {
   color: #ddd;
-  font-size: 0.8125em;
+  font-size: 0.5em;
   margin-top: 10px;
 }
 .use-motion .brand {
@@ -1046,7 +1046,7 @@ pre .javascript .function {
 .menu-item span.exturl {
   border-bottom: 0;
   display: block;
-  font-size: 0.8125em;
+  font-size: 0.5em;
   transition-property: border-color;
   transition-delay: 0s;
   transition-duration: 0.2s;
@@ -1130,7 +1130,7 @@ pre .javascript .function {
   display: block;
   height: auto;
   margin: 0 auto;
-  max-width: 120px;
+  max-width: 60px;
   padding: 2px;
   border-radius: 50%;
 }
@@ -1142,7 +1142,7 @@ pre .javascript .function {
 }
 .site-description {
   color: #999;
-  font-size: 0.8125em;
+  font-size: 0.5em;
   margin-top: 0;
   text-align: center;
 }
@@ -1153,14 +1153,14 @@ pre .javascript .function {
 .links-of-author span.exturl {
   border-bottom-color: #555;
   display: inline-block;
-  font-size: 0.8125em;
+  font-size: 0.5em;
   margin-bottom: 10px;
   margin-right: 10px;
   vertical-align: middle;
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #cfccff;
+  background: #bf8153;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -1191,11 +1191,11 @@ pre .javascript .function {
   color: #fff;
 }
 .links-of-blogroll {
-  font-size: 0.8125em;
+  font-size: 0.5em;
   margin-top: 10px;
 }
 .links-of-blogroll-title {
-  font-size: 0.875em;
+  font-size: 0.5em;
   font-weight: 600;
   margin-top: 0;
 }
@@ -1247,7 +1247,7 @@ pre .javascript .function {
   color: #555;
   cursor: pointer;
   display: inline-block;
-  font-size: 0.875em;
+  font-size: 0.5em;
 }
 .sidebar-nav li.sidebar-nav-overview {
   margin-left: 10px;
@@ -1294,7 +1294,7 @@ pre .javascript .function {
   overflow-y: auto;
 }
 .post-toc {
-  font-size: 0.875em;
+  font-size: 0.5em;
 }
 .post-toc ol {
   list-style: none;
@@ -1366,17 +1366,17 @@ pre .javascript .function {
 .site-state-item-count {
   color: inherit;
   display: block;
-  font-size: 1em;
+  font-size: 0.7em;
   font-weight: 600;
   text-align: center;
 }
 .site-state-item-name {
   color: #999;
-  font-size: 0.8125em;
+  font-size: 0.5em;
 }
 .footer {
   color: #999;
-  font-size: 0.875em;
+  font-size: 0.5em;
   padding: 20px 0;
 }
 .footer.footer-fixed {
@@ -1484,23 +1484,23 @@ pre .javascript .function {
   opacity: 0.8;
 }
 .post-body {
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Lato', "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei", sans-serif;
   overflow-wrap: break-word;
   word-wrap: break-word;
 }
 @media (min-width: 1200px) {
   .post-body {
-    font-size: 1.125em;
+    font-size: 0.875em;
   }
 }
 .post-body span.exturl .fa {
-  font-size: 0.875em;
+  font-size: 0.5em;
   margin-left: 4px;
 }
 .post-body .image-caption,
 .post-body .figure .caption {
   color: #999;
-  font-size: 0.875em;
+  font-size: 0.5em;
   font-weight: bold;
   line-height: 1;
   margin: -20px auto 15px;
@@ -1539,7 +1539,7 @@ pre .javascript .function {
   }
 }
 .posts-collapse .collection-title {
-  font-size: 1.125em;
+  font-size: 0.875em;
   position: relative;
 }
 .posts-collapse .collection-title::before {
@@ -1598,7 +1598,7 @@ pre .javascript .function {
   left: 0;
   margin-left: -4px;
   position: absolute;
-  top: 0.75em;
+  top: 0.5em;
   transition-property: background;
   width: 6px;
   transition-delay: 0s;
@@ -1613,12 +1613,12 @@ pre .javascript .function {
 }
 .posts-collapse .post-meta {
   display: inline;
-  font-size: 0.75em;
+  font-size: 0.5em;
   margin-right: 10px;
 }
 .posts-collapse .post-title {
   display: inline;
-  font-size: 1em;
+  font-size: 0.7em;
   font-weight: normal;
   margin-bottom: 0;
   margin-top: 0;
@@ -1639,7 +1639,7 @@ pre .javascript .function {
   width: 4px;
 }
 .posts-collapse .fa-external-link {
-  font-size: 0.875em;
+  font-size: 0.5em;
   margin-left: 5px;
 }
 .post-eof {
@@ -1748,7 +1748,7 @@ pre .javascript .function {
   margin: 0;
 }
 .posts-expand .post-header {
-  font-size: 1.125em;
+  font-size: 0.875em;
 }
 .posts-expand .post-title {
   font-weight: 400;
@@ -1783,18 +1783,18 @@ pre .javascript .function {
   visibility: visible;
 }
 .posts-expand .post-title-link .fa {
-  font-size: 0.875em;
+  font-size: 0.5em;
   margin-left: 5px;
 }
 .posts-expand .post-meta {
   color: #999;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
-  font-size: 0.75em;
+  font-family: 'Lato', "Hiragino Sans GB", "Microsoft YaHei Light", "Microsoft YaHei", "Source Han Sans CN", "WenQuanYi Micro Hei", sans-serif;
+  font-size: 0.5em;
   margin: 3px 0 60px 0;
   text-align: center;
 }
 .posts-expand .post-meta .post-description {
-  font-size: 0.875em;
+  font-size: 0.5em;
   margin-top: 2px;
 }
 .posts-expand .post-meta time {
@@ -1834,7 +1834,7 @@ pre .javascript .function {
 .post-nav-item a {
   border-bottom: none;
   display: block;
-  font-size: 0.875em;
+  font-size: 0.5em;
   line-height: 1.6;
   position: relative;
 }
@@ -1846,7 +1846,7 @@ pre .javascript .function {
   top: 2px;
 }
 .post-nav-item .fa {
-  font-size: 0.75em;
+  font-size: 0.5em;
 }
 .post-nav-item:first-child {
   margin-right: 15px;
@@ -1890,7 +1890,7 @@ pre .javascript .function {
 }
 .post-tags a {
   display: inline-block;
-  font-size: 0.8125em;
+  font-size: 0.5em;
 }
 .post-tags a:not(:last-child) {
   margin-right: 10px;
@@ -1909,7 +1909,7 @@ pre .javascript .function {
 }
 .social-like {
   display: flex;
-  font-size: 0.875em;
+  font-size: 0.5em;
   justify-content: center;
   text-align: center;
 }
@@ -2098,7 +2098,7 @@ pre .javascript .function {
   }
 }
 ul.breadcrumb {
-  font-size: 0.75em;
+  font-size: 0.5em;
   list-style: none;
   margin: 1em 0;
   padding: 0 2em;
