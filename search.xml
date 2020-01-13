@@ -1,6 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>Category和Extension</title>
+    <url>/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/</url>
+    <content><![CDATA[<h3 id="Category类别"><a href="#Category类别" class="headerlink" title="Category类别"></a>Category类别</h3><p>你可以使用<a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/Category.html" target="_blank" rel="noopener">category</a>来定义现有类的其他方法（甚至是那些源码无法获取的类，而无需子类化）。通常，你可以使用类别将方法添加到现有类中，比如<code>Cocoa</code>框架中定义的方法那样。所添加的方法由子类继承，并且在运行时与类的原始方法没有区别。您还可以使用自己类的类别来：</p>
+<a id="more"></a>
+
+<ol>
+<li>将自己的类的实现分发到单独的源文件中-例如，您可以将一个大类的方法分为几个类别，然后将每个类别放入不同的文件中。</li>
+<li>声明私有方法。</li>
+</ol>
+<p>通过在类别名称下的接口文件中声明方法并在相同名称下的实现文件中定义方法，可以将方法添加到类中。类别名称表示，方法是对在别处声明的类的扩展，而不是新的类。</p>
+<h3 id="Extension扩展"><a href="#Extension扩展" class="headerlink" title="Extension扩展"></a>Extension扩展</h3><p><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/CustomizingExistingClasses/CustomizingExistingClasses.html" target="_blank" rel="noopener">Class Extensions Extend the Internal Implementation</a></p>
+<p>类扩展与类别具有某些相似性，但是只能将其添加到您在编译时拥有源代码的类中（该类与该类扩展同时进行编译）。由类扩展声明的方法是在原始类的<code>@implementation</code>块中实现的，因此，例如，您不能在框架类（例如<code>Cocoa</code>，或<code>NSString</code>之类的<code>Cocoa Touch</code>类）上声明类扩展。</p>
+<h5 id="问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？"><a href="#问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？" class="headerlink" title="问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？"></a>问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？</h5><h6 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h6><p><a href="https://tech.meituan.com/2015/03/03/diveintocategory.html" target="_blank" rel="noopener">深入理解Objective-C:Category</a></p>
+<p><a href="https://juejin.im/post/5aef0a3b518825670f7bc0f3" target="_blank" rel="noopener">iOS底层原理总结-Category的本质</a></p>
+<p>分类是<code>Objective-C 2.0</code>之后添加的语言特性，主要作用是给已经存在的类添加方法。</p>
+<p>扩展是对类私有变量和私有方法的声明。</p>
+<h6 id="分类的局限性："><a href="#分类的局限性：" class="headerlink" title="分类的局限性："></a>分类的局限性：</h6><ol>
+<li>分类可以添加属性，但不能自动生成成员变量以及其set/get方法，可以通过关联对象来解决。</li>
+<li>如果分类中的方法和原有方法同名，运行时会优先调用category中的方法，覆盖掉类中原有的方法（调用顺序category-&gt;本类-&gt;父类）。</li>
+<li>如果多个category存在同名的方法，最后一个参与编译的分类中的实现将会被调用。</li>
+</ol>
+<h6 id="结构体："><a href="#结构体：" class="headerlink" title="结构体："></a>结构体：</h6><ol>
+<li>类的名字<code>name</code></li>
+<li>类<code>cls</code></li>
+<li>category中所有给类添加的实例方法的列表<code>instanceMethods</code></li>
+<li>category中所有添加的类方法的列表<code>classMethods</code></li>
+<li>category实现的所有协议的列表<code>protocols</code></li>
+<li>category中添加的所有属性<code>instanceProperties</code></li>
+</ol>
+<p>分类的结构体如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">struct category_t &#123;</span><br><span class="line">    const char *name;</span><br><span class="line">    classref_t cls;</span><br><span class="line">    struct method_list_t *instanceMethods; &#x2F;&#x2F; 对象方法</span><br><span class="line">    struct method_list_t *classMethods; &#x2F;&#x2F; 类方法</span><br><span class="line">    struct protocol_list_t *protocols; &#x2F;&#x2F; 协议</span><br><span class="line">    struct property_list_t *instanceProperties; &#x2F;&#x2F; 属性</span><br><span class="line">    &#x2F;&#x2F; Fields below this point are not always present on disk.</span><br><span class="line">    struct property_list_t *_classProperties;</span><br><span class="line"></span><br><span class="line">    method_list_t *methodsForMeta(bool isMeta) &#123;</span><br><span class="line">        if (isMeta) return classMethods;</span><br><span class="line">        else return instanceMethods;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    property_list_t *propertiesForMeta(bool isMeta, struct header_info *hi);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>iOS基础</category>
+      </categories>
+  </entry>
+  <entry>
     <title>Tagged Pointer in iOS</title>
     <url>/iOS/Tagged%20Pointer%20in%20iOS/</url>
     <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>问题1：下面的代码输出是什么？</p>
