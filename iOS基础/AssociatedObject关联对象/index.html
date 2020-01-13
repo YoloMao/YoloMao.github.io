@@ -62,27 +62,33 @@
   };
 </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="YoloMao的博客">
-<meta property="og:url" content="https://yolomao.github.io/index.html">
+  <meta name="description" content="前言iOS底层原理总结-关联对象实现原理 关联对象AssociatedObject完全解析 《map学习（下）— C++中的hash_map，unordered_map》 以上参考文章建议先阅读一遍，以下内容大同小异，为本人经过理解后的总结。 使用场景一般在分类Category添加的属性set&#x2F;get方法的实现中会用到关联对象。如下方的实例代码所示： 123456789@property (non">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AssociatedObject关联对象">
+<meta property="og:url" content="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/index.html">
 <meta property="og:site_name" content="YoloMao的博客">
+<meta property="og:description" content="前言iOS底层原理总结-关联对象实现原理 关联对象AssociatedObject完全解析 《map学习（下）— C++中的hash_map，unordered_map》 以上参考文章建议先阅读一遍，以下内容大同小异，为本人经过理解后的总结。 使用场景一般在分类Category添加的属性set&#x2F;get方法的实现中会用到关联对象。如下方的实例代码所示： 123456789@property (non">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2019/12/23/DxVqvQNu7sK8e25.png">
+<meta property="article:published_time" content="2020-01-13T08:03:55.581Z">
+<meta property="article:modified_time" content="2020-01-13T09:12:51.278Z">
 <meta property="article:author" content="YoloMao">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2019/12/23/DxVqvQNu7sK8e25.png">
 
-<link rel="canonical" href="https://yolomao.github.io/">
+<link rel="canonical" href="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome: true,
-    isPost: false
+    isHome: false,
+    isPost: true
   };
 </script>
 
-  <title>YoloMao的博客</title>
+  <title>AssociatedObject关联对象 | YoloMao的博客</title>
   
 
 
@@ -178,10 +184,10 @@
             
 
   <div class="posts-expand">
-        
+      
   
   
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -195,8 +201,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">AssociatedObject关联对象</a>
+          AssociatedObject关联对象
         </h1>
 
         <div class="post-meta">
@@ -232,7 +237,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p><a href="https://juejin.im/post/5af86b276fb9a07aa34a59e6" target="_blank" rel="noopener">iOS底层原理总结-关联对象实现原理</a></p>
+        <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p><a href="https://juejin.im/post/5af86b276fb9a07aa34a59e6" target="_blank" rel="noopener">iOS底层原理总结-关联对象实现原理</a></p>
 <p><a href="https://draveness.me/ao" target="_blank" rel="noopener">关联对象AssociatedObject完全解析</a></p>
 <p><a href="https://cloud.tencent.com/developer/article/1010478" target="_blank" rel="noopener">《map学习（下）— C++中的hash_map，unordered_map》</a></p>
 <p>以上参考文章建议先阅读一遍，以下内容大同小异，为本人经过理解后的总结。</p>
@@ -286,326 +291,71 @@
 <p>另：综上描述可以得出，<code>AssociatedObject</code>的生成和释放在底层已做好<code>retain、release</code>操作（不是通过ARC编译时添加），不需要手动添加内存管理代码。</p>
 <h3 id="问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？"><a href="#问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？" class="headerlink" title="问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？"></a>问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？</h3><p>关联对象可用于Category新增属性时添加实现，系统本身维护了一个单例<code>AssociationsManager</code>来维护关联对象的哈希表。关联对象被释放时不需要手动将关联对象的指针置空，底层已做好内存管理工作。（待润色）</p>
 
-      
     </div>
 
     
     
     
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="YoloMao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YoloMao的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
+      <div>
           
-            <a href="/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/" class="post-title-link" itemprop="url">Category和Extension</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
               
+<div class="my_post_copyright">
+  <script src="//cdn.bootcss.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+  
+  <!-- JS库 sweetalert 可修改路径 -->
+  <script type="text/javascript" src="http://jslibs.wuxubj.cn/sweetalert_mini/jquery-1.7.1.min.js"></script>
+  <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
 
-              <time title="创建时间：2020-01-13 16:03:55 / 修改时间：16:27:51" itemprop="dateCreated datePublished" datetime="2020-01-13T16:03:55+08:00">2020-01-13</time>
-            </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/iOS%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
-                    <span itemprop="name">iOS基础</span>
-                  </a>
-                </span>
-            </span>
+  <p><span>本文标题:</span>AssociatedObject关联对象</a></p>
+  <p><span>文章作者:</span>YoloMao</a></p>
+  <p><span>发布时间:</span>2020年01月13日 - 16:03:55</p>
+  <p><span>最后更新:</span>2020年01月13日 - 17:12:51</p>
+  
+  <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
+</div>
+<script> 
+    var clipboard = new Clipboard('.fa-clipboard');
+    clipboard.on('success', $(function(){
+      $(".fa-clipboard").click(function(){
+        swal({   
+          title: "",   
+          text: '复制成功',   
+          html: false,
+          timer: 500,   
+          showConfirmButton: false
+        });
+      });
+    }));  
+</script>
+
 
           
+      </div>
 
-        </div>
-      </header>
 
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="Category类别"><a href="#Category类别" class="headerlink" title="Category类别"></a>Category类别</h3><p>你可以使用<a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/Category.html" target="_blank" rel="noopener">category</a>来定义现有类的其他方法（甚至是那些源码无法获取的类，而无需子类化）。通常，你可以使用类别将方法添加到现有类中，比如<code>Cocoa</code>框架中定义的方法那样。所添加的方法由子类继承，并且在运行时与类的原始方法没有区别。您还可以使用自己类的类别来：</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
         
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS/Tagged%20Pointer%20in%20iOS/">
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="YoloMao">
-      <meta itemprop="description" content="">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YoloMao的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/iOS/Tagged%20Pointer%20in%20iOS/" class="post-title-link" itemprop="url">Tagged Pointer in iOS</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-12-18 17:04:29" itemprop="dateCreated datePublished" datetime="2019-12-18T17:04:29+08:00">2019-12-18</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-24 08:52:34" itemprop="dateModified" datetime="2019-12-24T08:52:34+08:00">2019-12-24</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>问题1：下面的代码输出是什么？</p>
-<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSNumber</span> *weakNumber;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSString</span> *weakString;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSDate</span> *weakDate;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSObject</span> *weakObj;</span><br><span class="line"><span class="keyword">int</span> num = <span class="number">123</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">    weakObj = [[<span class="built_in">NSObject</span> alloc] init];</span><br><span class="line">    weakNumber = [<span class="built_in">NSNumber</span> numberWithInt:num];</span><br><span class="line">    weakString = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"string%d"</span>, num];</span><br><span class="line">    weakDate   = [<span class="built_in">NSDate</span> dateWithTimeIntervalSince1970:<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakObj is %@"</span>, weakObj);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakNumber is %@"</span>, weakNumber);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakString is %@"</span>, weakString);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakDate is %@"</span>, weakDate);</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/iOS/Tagged%20Pointer%20in%20iOS/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
         
-      
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/" rel="prev" title="Category和Extension">
+      <i class="fa fa-chevron-left"></i> Category和Extension
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="YoloMao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YoloMao的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/" class="post-title-link" itemprop="url">测试任意指针是否为有效的Objective-C对象</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-12-17 17:52:45" itemprop="dateCreated datePublished" datetime="2019-12-17T17:52:45+08:00">2019-12-17</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-24 08:52:03" itemprop="dateModified" datetime="2019-12-24T08:52:03+08:00">2019-12-24</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
     
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>翻译自：<a href="https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/" target="_blank" rel="noopener">https://blog.timac.org/2016/1124-testing-if-an-arbitrary-pointer-is-a-valid-objective-c-object/</a></p>
-<p>仅供学习交流，侵删。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/iOS/%E6%B5%8B%E8%AF%95%E4%BB%BB%E6%84%8F%E6%8C%87%E9%92%88%E6%98%AF%E5%90%A6%E4%B8%BA%E6%9C%89%E6%95%88%E7%9A%84Objective-C%E5%AF%B9%E8%B1%A1/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-        
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block home" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/uploads/avatar.png">
-      <meta itemprop="name" content="YoloMao">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="YoloMao的博客">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-          
-            <a href="/iOS/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/" class="post-title-link" itemprop="url">Aspects解读（一）</a>
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2019-11-28 17:01:05" itemprop="dateCreated datePublished" datetime="2019-11-28T17:01:05+08:00">2019-11-28</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-calendar-check-o"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-24 08:52:19" itemprop="dateModified" datetime="2019-12-24T08:52:19+08:00">2019-12-24</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>Aspects是一个基于runtime运行时实现的轻量级AOP编程库，整个库代码不足千行，但干货满满。</p>
-<p>阅读本文前，希望你具备：</p>
-<p>1.看过Block源码</p>
-<p>2.了解过运行时</p>
-<p>Aspects源码地址：<a href="https://github.com/steipete/Aspects" target="_blank" rel="noopener">Github</a>(版本：Aspects v1.4.2)</p>
-<p>Block源码地址：<a href="https://opensource.apple.com/source/libclosure/libclosure-73/Block_private.h.auto.html" target="_blank" rel="noopener">libclosure-73/Block_private.h</a></p>
-<p>runtime源码地址：<a href="https://opensource.apple.com/source/objc4/objc4-750" target="_blank" rel="noopener">objc4-750</a></p>
-<p><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ObjCRuntimeGuide/Articles/ocrtTypeEncodings.html#//apple_ref/doc/uid/TP40008048-CH100-SW1" target="_blank" rel="noopener">Type Encodings</a></p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/iOS/Aspects%E8%A7%A3%E8%AF%BB%EF%BC%88%E4%B8%80%EF%BC%89/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
   </article>
   
   
   
 
   </div>
-
-  
-
 
 
           </div>
@@ -656,6 +406,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用场景"><span class="nav-number">2.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#底层实现"><span class="nav-number">3.</span> <span class="nav-text">底层实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#AssociationsManager"><span class="nav-number">3.1.</span> <span class="nav-text">AssociationsManager</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AssociationsHashMap"><span class="nav-number">3.2.</span> <span class="nav-text">AssociationsHashMap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ObjectAssociationMap"><span class="nav-number">3.3.</span> <span class="nav-text">ObjectAssociationMap</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ObjcAssociation"><span class="nav-number">3.4.</span> <span class="nav-text">ObjcAssociation</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#实现原理"><span class="nav-number">3.5.</span> <span class="nav-text">实现原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objc-getAssociatedObject"><span class="nav-number">3.6.</span> <span class="nav-text">objc_getAssociatedObject</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#objc-removeAssociatedObjects"><span class="nav-number">3.7.</span> <span class="nav-text">objc_removeAssociatedObjects</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？"><span class="nav-number">4.</span> <span class="nav-text">问题：关联对象有什么应用，系统如何管理关联对象？其被释放的时候需要手动将所有的关联对象的指针置空么？</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
