@@ -7,6 +7,8 @@
 <p><a href="https://draveness.me/ao" target="_blank" rel="noopener">关联对象AssociatedObject完全解析</a></p>
 <p><a href="https://cloud.tencent.com/developer/article/1010478" target="_blank" rel="noopener">《map学习（下）— C++中的hash_map，unordered_map》</a></p>
 <p>以上参考文章建议先阅读一遍，以下内容大同小异，为本人经过理解后的总结。</p>
+<a id="more"></a>
+
 <h3 id="使用场景"><a href="#使用场景" class="headerlink" title="使用场景"></a>使用场景</h3><p>一般在分类Category添加的属性set/get方法的实现中会用到关联对象。如下方的实例代码所示：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@property (nonatomic, strong) NSString *name;</span><br><span class="line"></span><br><span class="line">- (void)setName:(NSString *)name &#123;</span><br><span class="line">    objc_setAssociatedObject(self, @selector(name), name, OBJC_ASSOCIATION_RETAIN_NONATOMIC);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (NSString *)name &#123;</span><br><span class="line">    return objc_getAssociatedObject(self, _cmd);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
