@@ -1,6 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>AutoreleasePool与编译器优化</title>
+    <url>/iOS%E5%9F%BA%E7%A1%80/AutoreleasePool%E4%B8%8E%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<h2 id="0x1"><a href="#0x1" class="headerlink" title="0x1"></a>0x1</h2><p>某次偶然发现<code>main.m</code>里的 main 函数有所变化，经过一番查询<a href="#1"><sup>[1]</sup></a>，发现是从 Xcode 11 开始。</p>
+<img src="https://i.loli.net/2021/04/07/xNm2AnloGjkSJrU.png" alt="mainInXcode.png" style="zoom:40%;" />
+
+<p>而在此之前， main 函数的实现为：</p>
+<img src="https://i.loli.net/2021/04/07/tzUpfadbuZGkPK6.png" alt="mainBeforeXcode11.png" style="zoom:40%;" />
+
+<a id="more"></a>
+
+<p>熟悉 AutoreleasePool 底层原理的同学应该都知道，在<code>@autoreleasepool</code>作用范围内生成的对象，在 ARC 的作用下，将加入自动释放池。如 Xcode 11 之前的 main 函数，结合汇编代码，实际内存管理将大概会展开为以下实现：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int main(int argc, char *argv[]) &#123;</span><br><span class="line">  void *pool &#x3D; objc_autoreleasePoolPush();</span><br><span class="line">  NSString *name &#x3D; NSStringFromClass([AppDelegate class]);</span><br><span class="line">  name &#x3D; objc_autoreleaseReturnValue(name); &#x2F;&#x2F;objc_autorelease(name); </span><br><span class="line">  name &#x3D; objc_retainAutoreleasedReturnValue(name); &#x2F;&#x2F;objc_retain(name);</span><br><span class="line">  int tmp &#x3D; UIApplicationMain(argc, argv, nil, name);</span><br><span class="line">  objc_release(name);</span><br><span class="line">  objc_autoreleasePoolPop(pool); &#x2F;&#x2F;对 push 和 pop 之间加入自动释放池的对象进行 release 操作，即 [name release];</span><br><span class="line">  return tmp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但实际上：</p>
+<ol>
+<li><p><code>UIApplicationMain</code>函数在程序运行期间不会返回，因此这里生成的 name 对象一直会处在堆上无法释放造成内存泄漏；</p>
+</li>
+<li><p>并且程序终止之后，所使用的的内存空间将会由系统回收，自动释放池的 drain 在这里没有意义。</p>
+</li>
+</ol>
+<p>新的模板代码中，将 name 对象的初始化操作与<code>UIApplicationMain</code>分离开，展开后如下：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int main(int argc, char *argv[]) &#123;</span><br><span class="line">  NSString *name;</span><br><span class="line">  void *pool &#x3D; objc_autoreleasePoolPush();</span><br><span class="line">  name &#x3D; NSStringFromClass([AppDelegate class]);</span><br><span class="line">  name &#x3D; objc_autoreleaseReturnValue(name); &#x2F;&#x2F;objc_autorelease(name);</span><br><span class="line">  name &#x3D; objc_retainAutoreleasedReturnValue(name); &#x2F;&#x2F;objc_retain(name);</span><br><span class="line">  objc_release(nil); &#x2F;&#x2F;在汇编中，寄存器 r0 的值为 0x0，所以我也不知道这一步有什么用</span><br><span class="line">  objc_autoreleasePoolPop(pool); &#x2F;&#x2F;对自动释放池内所有对象进行 release 操作，即 [name release];</span><br><span class="line">  int tmp &#x3D; UIApplicationMain(argc, argv, nil, name);</span><br><span class="line">  objc_storeStrong(&amp;name, nil);</span><br><span class="line">  return tmp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>name 对象还是得不到释放，程序在终止前不会执行到<code>objc_storeStrong(&amp;name, nil);</code>。</p>
+<p>那么修改的意义何在呢？</p>
+<blockquote>
+<p><em>// Setup code that might create autoreleased objects goes here.</em></p>
+</blockquote>
+<p>如果需要创建自动释放的对象，那么现在，在<code>@autoreleasepool</code>作用域内创建即可正常释放。</p>
+<p>注意：以上伪代码中，<code>objc_autoreleaseReturnValue(name)</code> 其实是在 <code>NSStringFromClass([AppDelegate class])</code>中，这里将它提取出来方便理解。</p>
+<h2 id="0x2"><a href="#0x2" class="headerlink" title="0x2"></a>0x2</h2><p>其实在上文的伪实现中，<code>objc_autoreleaseReturnValue(name)</code>和<code>objc_retainAutoreleasedReturnValue(name)</code>可以去掉，这一切都归功于 AutoreleasePool 与线程局部存储（Thread Local Storage, TLS）<a href="#2"><sup>[2]</sup></a>的配合。</p>
+<p>在 arm64 架构下，<code>objc_autoreleaseReturnValue</code>执行时，会通过<code>__builtin_return_address(0)</code>判断当前函数返回地址对应的汇编指令，是否是<code>mov fp, fp</code>，如果是的话，将 0x1 作为 value，<code>RETURN_DISPOSITION_KEY</code> 作为 key，存储在 TLS 中，并直接返回 obj，不执行<code>objc_autorelease(obj)</code>；</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; NSObject.mm</span><br><span class="line">&#x2F;&#x2F; Prepare a value at +1 for return through a +0 autoreleasing convention.</span><br><span class="line">id </span><br><span class="line">objc_autoreleaseReturnValue(id obj)</span><br><span class="line">&#123;</span><br><span class="line">    if (prepareOptimizedReturn(ReturnAtPlus1)) return obj;</span><br><span class="line"></span><br><span class="line">    return objc_autorelease(obj);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; objc-object.h</span><br><span class="line">enum ReturnDisposition : bool &#123;</span><br><span class="line">    ReturnAtPlus0 &#x3D; false, ReturnAtPlus1 &#x3D; true</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; Try to prepare for optimized return with the given disposition (+0 or +1).</span><br><span class="line">&#x2F;&#x2F; Returns true if the optimized path is successful.</span><br><span class="line">&#x2F;&#x2F; Otherwise the return value must be retained and&#x2F;or autoreleased as usual.</span><br><span class="line">static ALWAYS_INLINE bool </span><br><span class="line">prepareOptimizedReturn(ReturnDisposition disposition)</span><br><span class="line">&#123;</span><br><span class="line">    ASSERT(getReturnDisposition() &#x3D;&#x3D; ReturnAtPlus0);</span><br><span class="line"></span><br><span class="line">    if (callerAcceptsOptimizedReturn(__builtin_return_address(0))) &#123;</span><br><span class="line">        if (disposition) setReturnDisposition(disposition);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F;arm64</span><br><span class="line">static ALWAYS_INLINE bool </span><br><span class="line">callerAcceptsOptimizedReturn(const void *ra)</span><br><span class="line">&#123;</span><br><span class="line">    &#x2F;&#x2F; fd 03 1d aa    mov fp, fp</span><br><span class="line">    &#x2F;&#x2F; arm64 instructions are well-aligned</span><br><span class="line">    if (*(uint32_t *)ra &#x3D;&#x3D; 0xaa1d03fd) &#123;</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    return false;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>objc_retainAutoreleasedReturnValue</code>执行时，判断<code>RETURN_DISPOSITION_KEY</code> 对应 value 是否为 0x1 并重置为 0x0，是的话，则直接返回 obj，不执行<code>objc_retain(obj)</code>；</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; NSObject.mm</span><br><span class="line">&#x2F;&#x2F; Accept a value returned through a +0 autoreleasing convention for use at +1.</span><br><span class="line">id</span><br><span class="line">objc_retainAutoreleasedReturnValue(id obj)</span><br><span class="line">&#123;</span><br><span class="line">    if (acceptOptimizedReturn() &#x3D;&#x3D; ReturnAtPlus1) return obj;</span><br><span class="line"></span><br><span class="line">    return objc_retain(obj);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; objc-object.h</span><br><span class="line">&#x2F;&#x2F; Try to accept an optimized return.</span><br><span class="line">&#x2F;&#x2F; Returns the disposition of the returned object (+0 or +1).</span><br><span class="line">&#x2F;&#x2F; An un-optimized return is +0.</span><br><span class="line">static ALWAYS_INLINE ReturnDisposition </span><br><span class="line">acceptOptimizedReturn()</span><br><span class="line">&#123;</span><br><span class="line">    ReturnDisposition disposition &#x3D; getReturnDisposition();</span><br><span class="line">    setReturnDisposition(ReturnAtPlus0);  &#x2F;&#x2F; reset to the unoptimized state</span><br><span class="line">    return disposition;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>基于以上优化，一般情况下，由工厂方法生成的对象不再需要进入自动释放池，加快了释放过程。</p>
+<p>另外，<code>mov fp, fp</code>是编译器对于<code>objc_autoreleaseReturnValue</code>和<code>objc_retainAutoreleasedReturnValue</code>连续调用所做的一个标记<a href="#3"><sup>[3]</sup></a>。</p>
+<blockquote>
+<p><em>Well take a look at that. It’s added in a <code>mov r7, r7</code> in each case which is a noop (i.e. does nothing as it moves <code>r7</code> back into itself). If you examine the binary values for these instructions then you’ll see they match the values that we were told to compare against. The compiler has added this as a marker to tell the <code>objc_autoreleaseReturnValue</code> that the caller is about to call <code>objc_retainAutoreleasedReturnValue</code>.</em></p>
+</blockquote>
+<p>按照以上分析，新的 main 函数模板代码中，appDelegateClassName 不会进入自动释放池，而事实上确实如此，执行以下代码：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#import &lt;UIKit&#x2F;UIKit.h&gt;</span><br><span class="line">#import &quot;AppDelegate.h&quot;</span><br><span class="line"></span><br><span class="line">extern void _objc_autoreleasePoolPrint(void);</span><br><span class="line"></span><br><span class="line">int main(int argc, char * argv[]) &#123;</span><br><span class="line">&#x2F;&#x2F;    __weak NSString *a;</span><br><span class="line">    NSString * appDelegateClassName;</span><br><span class="line">    @autoreleasepool &#123;</span><br><span class="line">        &#x2F;&#x2F; Setup code that might create autoreleased objects goes here.</span><br><span class="line">        appDelegateClassName &#x3D; NSStringFromClass([AppDelegate class]);</span><br><span class="line">        _objc_autoreleasePoolPrint();</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    return UIApplicationMain(argc, argv, nil, appDelegateClassName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>lldb 打印结果为：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objc[32590]: ##############</span><br><span class="line">objc[32590]: AUTORELEASE POOLS for thread 0x102493880</span><br><span class="line">objc[32590]: 0 releases pending.</span><br><span class="line">objc[32590]: [0x1]  ................  PAGE (placeholder)</span><br><span class="line">objc[32590]: [0x1]  ################  POOL (placeholder)</span><br><span class="line">objc[32590]: ##############</span><br></pre></td></tr></table></figure>
+
+<p>可以看到池中没有对象。</p>
+<p>细心的同学可能会注意到，以上代码中有个<code>__weak</code>修饰的 a 变量，当我们把它也加入运行代码中时，lldb 打印结果为：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">objc[32676]: ##############</span><br><span class="line">objc[32676]: AUTORELEASE POOLS for thread 0x1025ab880</span><br><span class="line">objc[32676]: 2 releases pending.</span><br><span class="line">objc[32676]: [0x14c811000]  ................  PAGE  (hot) (cold)</span><br><span class="line">objc[32676]: [0x14c811038]  ################  POOL 0x14c811038</span><br><span class="line">objc[32676]: [0x14c811040]       0x283f9c3e0  __NSCFString</span><br><span class="line">objc[32676]: ##############</span><br></pre></td></tr></table></figure>
+
+<p>黑魔法失灵了！</p>
+<h2 id="0x3"><a href="#0x3" class="headerlink" title="0x3"></a>0x3</h2><p>既然 AutoreleasePool 依据汇编层面进行了优化，那么我们便从汇编中一探究竟。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F;没有加__weak： </span><br><span class="line">0x100072148 &lt;+72&gt;:  bl 0x100072478 ; symbol stub for: NSStringFromClass</span><br><span class="line">0x10007214c &lt;+76&gt;:  mov x29, x29 &#x2F;&#x2F;mov fp, fp</span><br><span class="line">0x100072150 &lt;+80&gt;:  bl 0x1000724e4 ; symbol stub for: objc_retainAutoreleasedReturnValue</span><br><span class="line">  </span><br><span class="line">  </span><br><span class="line">&#x2F;&#x2F;加了__weak：</span><br><span class="line">0x1001da0b8 &lt;+76&gt;:  bl 0x1001da418 ; symbol stub for: NSStringFromClass</span><br><span class="line">0x1001da0bc &lt;+80&gt;:  str x0, [sp, #0x8] &#x2F;&#x2F;入栈</span><br><span class="line">0x1001da0c0 &lt;+84&gt;:  b 0x1001da0c4 ; &lt;+88&gt; at main.m:68:30 &#x2F;&#x2F;跳转到 main.m 68:30 继续执行，其实就是下一条指令的地址</span><br><span class="line">0x1001da0c4 &lt;+88&gt;:  mov x29, x29 &#x2F;&#x2F;mov fp, fp</span><br><span class="line">0x1001da0c8 &lt;+92&gt;:  ldr x0, [sp, #0x8] &#x2F;&#x2F;出栈</span><br><span class="line">0x1001da0cc &lt;+96&gt;:  bl 0x1001da49c ; symbol stub for: objc_retainAutoreleasedReturnValue</span><br></pre></td></tr></table></figure>
+
+<p>描述几个基本概念：</p>
+<blockquote>
+<p>母函数执行子函数前，会将寄存器中的原始值存储在栈中，即入栈；</p>
+<p>子函数执行后，再从栈中将内容读取到寄存器，即出栈，接着继续执行后面的指令。</p>
+<p>寄存器<a href="#4"><sup>[4]</sup></a>：</p>
+<p>SP(Stack Pointer)：堆栈指针寄存器，指向栈顶地址</p>
+<p>FP(Frame Pointer, R29)：帧指针寄存器，通常指向栈底地址，即指向母函数与被调用的子函数在栈中的交界</p>
+<p>LR(Link Register, R30)：链接寄存器，保存子函数返回后执行的下一条指令的内存地址</p>
+<p>指令<a href="#5"><sup>[5]</sup></a>：</p>
+<p>B 函数地址：跳转到对应函数中执行</p>
+<p>BL 函数地址：将下一条指令的地址存放到 LR(R30) 寄存器中，并跳转到对应函数中执行</p>
+<p>MOV x0 x1：寄存器间传值或者寄存器与常量之间传值，即 R0 = R1，寄存器与内存之间传值用 STR 和 LDR</p>
+<p>STR x0, [SP, #0x8]：将寄存器 x0 中的数据保存到 SP+0x8 地址值指向的存储空间(入栈)</p>
+<p>LDR x0, [SP, #0x8]：将 SP+0x8 的地址值内的数据读取到寄存器 x0 中(出栈)</p>
+</blockquote>
+<p>当加了<code>__weak</code>修饰符后，编译器在<code>objc_autoreleaseReturnValue</code>和<code>objc_retainAutoreleasedReturnValue</code>之间加入了入栈，跳转，出栈操作，导致<code>callerAcceptsOptimizedReturn(__builtin_return_address(0))</code>的值为 false，从而执行了<code>objc_autorelease</code>，加到了自动释放池之中。</p>
+<p>依我看来，添加的几条指令有点多余。为什么编译器会加上这些指令呢？目前我不太明白。</p>
+<p>但有方法可以去掉这几条指令，<strong>Build Settings -&gt; Apple Clang - Code Generation -&gt; Optimization Level<a href="#6"><sup>[6]</sup></a> -&gt; Debug</strong> 设置为除了 *<em><code>None[-O0]</code> *</em>以外的配置即可。运行之后，可以看到 AutoreleasePool 里不会再加入对象，但也出现一条信息：</p>
+<blockquote>
+<p>Project was compiled with optimization - stepping may behave oddly; variables may not be available.</p>
+</blockquote>
+<p>一般 Debug 下，配置为 <code>None[-O0]</code>，Release 下配置为 <code>Fastest，Smallest[-Os]</code>。那么知道在 Release 下一切正常即可。</p>
+<p>相应地，对于尾调用优化在 <strong>Debug</strong> 下不起作用的情况，配置为 <code>Faster[-O2]</code>即可生效。</p>
+<h2 id="0x4"><a href="#0x4" class="headerlink" title="0x4"></a>0x4</h2><p>对尾调用优化的介绍，这里有 2 篇文章介绍：</p>
+<p><a href="https://www.ruanyifeng.com/blog/2015/04/tail-call.html" target="_blank" rel="noopener">尾调用优化</a></p>
+<p><a href="https://juejin.cn/post/6844903664050536455" target="_blank" rel="noopener">iOS objc_msgSend尾调用优化机制详解</a></p>
+<p>其中第二篇文章中有写到，<strong>尾调用优化在Release模式下才会有，Debug模式下没有</strong>的情况，可以通过设置 Optimization Level 解决。</p>
+<p>LLVM 编译优化是通过 Pass 实现的，查看当前 Optimization Level 对应的 Pass arguments<a href="#9"><sup>[9]</sup></a>：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">clang -OX -mllvm -debug-pass&#x3D;Arguments foo.c</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://i.loli.net/2021/04/09/yk8Urp7KCo2xZvs.png" alt="image.png"></p>
+<p>上图是<code>Faster[-O2]</code>对应的 Pass Arguments，可以看到其中有一项是<code>-tailcallelim</code><a href="#10"><sup>[10]</sup></a>，这个 Pass 针对的就是尾调用优化。</p>
+<blockquote>
+<p><em>This file transforms calls of the current function (self recursion) followed by a return instruction with a branch to the entry of the function, creating a loop. This pass also implements the following extensions to the basic algorithm:</em><br><em>1. Trivial instructions between the call and return do not prevent the transformation from taking place, though currently the analysis cannot support moving any really useful instructions (only dead ones).</em><br><em>2. This pass transforms functions that are prevented from being tail recursive by an associative expression to use an accumulator variable, thus compiling the typical naive factorial or fib implementation into efficient code.</em><br><em>3. TRE is performed if the function returns void, if the return returns the result returned by the call, or if the function returns a run-time constant on all exits from the function. It is possible, though unlikely, that the return returns something else (like constant 0), and can still be TRE’d. It can be TRE’d if <strong>all other</strong> return instructions in the function return the exact same value.</em><br><em>4. If it can prove that callees do not access their caller stack frame, they are marked as eligible for tail call elimination (by the code generator).</em></p>
+</blockquote>
+<p>另：<code>Fast [-O, O1]</code> 中没有<code>-tailcallelim</code>，基于本人 MacBook 当前 LLVM 版本 Apple clang version 12.0.0 (clang-1200.0.32.27)，这个 StackOverflow 回答中<a href="#11"><sup>[11]</sup></a>罗列了各个级别对应的 Pass，不过是在 version 6.0 下，以新版本为主。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><p><em>[1]<a href="https://www.jianshu.com/p/63426e6bf7aa" target="_blank" rel="noopener">如何理解 Xcode 11 模板项目中 main.m 的变化？</a></em><span id="1"> </span></p>
+</li>
+<li><p><em>[2]<a href="http://blog.sunnyxx.com/2014/10/15/behind-autorelease/" target="_blank" rel="noopener">黑幕背后的Autorelease</a></em><span id="2"> </span></p>
+</li>
+<li><p><em>[3]<a href="https://www.galloway.me.uk/2012/02/how-does-objc_retainautoreleasedreturnvalue-work/" target="_blank" rel="noopener">How does objc_retainAutoreleasedReturnValue work?</a></em><span id="3"> </span></p>
+</li>
+<li><p><em>[4]<a href="https://github.com/ARM-software/abi-aa/blob/master/aapcs64/aapcs64.rst#general-purpose-registers" target="_blank" rel="noopener">General-purpose Registers</a></em><span id="4"> </span></p>
+</li>
+<li><p><em>[5]<a href="https://developer.arm.com/documentation/dui0802/a/A64-Data-Transfer-Instructions?lang=en" target="_blank" rel="noopener">A64 Data Transfer Instructions</a></em><span id="5"> </span></p>
+</li>
+<li><p><em>[6]<a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/MOSXAppProgrammingGuide/Performance/Performance.html#//apple_ref/doc/uid/TP40010543-CH9-102307" target="_blank" rel="noopener">Compiler-Level Optimizations</a></em><span id="6"> </span></p>
+</li>
+<li><p><em>[7]<a href="https://www.ruanyifeng.com/blog/2015/04/tail-call.html" target="_blank" rel="noopener">尾调用优化</a></em></p>
+</li>
+<li><p><em>[8]<a href="https://juejin.cn/post/6844903664050536455" target="_blank" rel="noopener">iOS objc_msgSend尾调用优化机制详解</a></em></p>
+</li>
+<li><p><em>[9]<a href="https://stackoverflow.com/questions/35920795/list-of-optimizations-available-in-clang-and-llvm-opt" target="_blank" rel="noopener">List of optimizations available in clang and llvm opt</a></em><span id="9"> </span></p>
+</li>
+<li><p><em>[10]<a href="https://llvm.org/docs/Passes.html#tailcallelim-tail-call-elimination" target="_blank" rel="noopener">-tailcallelim: Tail Call Elimination</a></em><span id="10"> </span></p>
+</li>
+<li><p><em>[11]<a href="https://stackoverflow.com/questions/15548023/clang-optimization-levels" target="_blank" rel="noopener">Clang optimization levels</a></em><span id="11"> </span></p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>iOS基础</category>
+      </categories>
+  </entry>
+  <entry>
     <title>AssociatedObject关联对象</title>
     <url>/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/</url>
     <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p><a href="https://juejin.im/post/5af86b276fb9a07aa34a59e6" target="_blank" rel="noopener">iOS底层原理总结-关联对象实现原理</a></p>
@@ -103,7 +225,7 @@
   </entry>
   <entry>
     <title>Tagged Pointer in iOS</title>
-    <url>/iOS/Tagged%20Pointer%20in%20iOS/</url>
+    <url>/iOS%E5%9F%BA%E7%A1%80/Tagged%20Pointer%20in%20iOS/</url>
     <content><![CDATA[<h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>问题1：下面的代码输出是什么？</p>
 <figure class="highlight objc"><table><tr><td class="code"><pre><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSNumber</span> *weakNumber;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSString</span> *weakString;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSDate</span> *weakDate;</span><br><span class="line">__<span class="keyword">weak</span> <span class="built_in">NSObject</span> *weakObj;</span><br><span class="line"><span class="keyword">int</span> num = <span class="number">123</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">    weakObj = [[<span class="built_in">NSObject</span> alloc] init];</span><br><span class="line">    weakNumber = [<span class="built_in">NSNumber</span> numberWithInt:num];</span><br><span class="line">    weakString = [<span class="built_in">NSString</span> stringWithFormat:<span class="string">@"string%d"</span>, num];</span><br><span class="line">    weakDate   = [<span class="built_in">NSDate</span> dateWithTimeIntervalSince1970:<span class="number">0</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakObj is %@"</span>, weakObj);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakNumber is %@"</span>, weakNumber);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakString is %@"</span>, weakString);</span><br><span class="line"><span class="built_in">NSLog</span>(<span class="string">@"weakDate is %@"</span>, weakDate);</span><br></pre></td></tr></table></figure>
 
@@ -180,6 +302,9 @@
 <p><img src="https://i.loli.net/2019/12/20/4Unysd2SD3Kr8of.png" alt="WX20191220-113101@2x.png"></p>
 <figure class="highlight objc"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  ||  __cplusplus &gt;= 201103L</span></span><br><span class="line"><span class="keyword">enum</span> objc_tag_index_t : uint16_t</span><br><span class="line"><span class="meta">#<span class="meta-keyword">else</span></span></span><br><span class="line"><span class="keyword">typedef</span> uint16_t objc_tag_index_t;</span><br><span class="line"><span class="keyword">enum</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 60-bit payloads</span></span><br><span class="line">    OBJC_TAG_NSAtom            = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_1                 = <span class="number">1</span>, </span><br><span class="line">    OBJC_TAG_NSString          = <span class="number">2</span>, </span><br><span class="line">    OBJC_TAG_NSNumber          = <span class="number">3</span>, </span><br><span class="line">    OBJC_TAG_NSIndexPath       = <span class="number">4</span>, </span><br><span class="line">    OBJC_TAG_NSManagedObjectID = <span class="number">5</span>, </span><br><span class="line">    OBJC_TAG_NSDate            = <span class="number">6</span>,</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 60-bit reserved</span></span><br><span class="line">    OBJC_TAG_RESERVED_7        = <span class="number">7</span>, </span><br><span class="line"></span><br><span class="line">    <span class="comment">// 52-bit payloads</span></span><br><span class="line">    OBJC_TAG_Photos_1          = <span class="number">8</span>,</span><br><span class="line">    OBJC_TAG_Photos_2          = <span class="number">9</span>,</span><br><span class="line">    OBJC_TAG_Photos_3          = <span class="number">10</span>,</span><br><span class="line">    OBJC_TAG_Photos_4          = <span class="number">11</span>,</span><br><span class="line">    OBJC_TAG_XPC_1             = <span class="number">12</span>,</span><br><span class="line">    OBJC_TAG_XPC_2             = <span class="number">13</span>,</span><br><span class="line">    OBJC_TAG_XPC_3             = <span class="number">14</span>,</span><br><span class="line">    OBJC_TAG_XPC_4             = <span class="number">15</span>,</span><br><span class="line"></span><br><span class="line">    OBJC_TAG_First60BitPayload = <span class="number">0</span>, </span><br><span class="line">    OBJC_TAG_Last60BitPayload  = <span class="number">6</span>, </span><br><span class="line">    OBJC_TAG_First52BitPayload = <span class="number">8</span>, </span><br><span class="line">    OBJC_TAG_Last52BitPayload  = <span class="number">263</span>, </span><br><span class="line"></span><br><span class="line">    OBJC_TAG_RESERVED_264      = <span class="number">264</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> __has_feature(objc_fixed_enum)  &amp;&amp;  !defined(__cplusplus)</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">enum</span> objc_tag_index_t objc_tag_index_t;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br></pre></td></tr></table></figure>
 ]]></content>
+      <categories>
+        <category>iOS基础</category>
+      </categories>
   </entry>
   <entry>
     <title>测试任意指针是否为有效的Objective-C对象</title>
