@@ -1,6 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>从汇编看 lazy 符号绑定</title>
+    <url>/iOS%E5%9F%BA%E7%A1%80/%E4%BB%8E%E6%B1%87%E7%BC%96%E7%9C%8B%20lazy%20%E7%AC%A6%E5%8F%B7%E7%BB%91%E5%AE%9A/</url>
+    <content><![CDATA[<p>在 Mach-O 中，如果<code>__TEXT,__text</code> 用到了外部符号，比如 NSLog、objc_retain、printf 等等，其实是以 PIC 的方式调用。让我们利用 MachOView 从汇编层面看一下。</p>
+<a id="more"></a>
+
+<p>如下是 main 函数的汇编代码：</p>
+<p><img src="https://i.loli.net/2021/04/13/6BsCE5FubSvXMqw.png" alt="image.png"></p>
+<p>可以看到<code>objc_retainAutoreleasedReturnValue</code>的调用是通过 bl 指令跳转到<code>0x100c5a410</code>，我们通过在 lldb 中输入<code>image list</code>获取当前执行文件的基地址。</p>
+<p><img src="https://i.loli.net/2021/04/13/dNzpJHA7VPbftmY.png" alt="image2.png"></p>
+<p>得出在可执行文件中的偏移为<code>0x100c5a410 - 0x0000000100c54000 = 0x6410</code>。</p>
+<p>打开 MachOView 加载可执行文件，找到 Offset 为<code>0x6410</code>的位置（在<code>__TEXT,__stubs</code>中）。</p>
+<p><img src="https://i.loli.net/2021/04/13/HyTIUr57oSxQEiK.png" alt="image3.png"></p>
+<p>机器码为：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">1F2003D5</span><br><span class="line">70E20258</span><br><span class="line">00021FD6</span><br></pre></td></tr></table></figure>
+
+<p>安装 radare2，通过以下方式可以方便完成汇编/机器码的转换：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ rasm2 -a arm -b 64 -d fd031daa</span><br><span class="line">$ rasm2 -a arm -b 64 &#39;MOV x29, x29&#39;</span><br></pre></td></tr></table></figure>
+
+<p>转换以上机器码可得：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">nop               &#x2F;&#x2F;无操作</span><br><span class="line">ldr x16, 0x5c4c   &#x2F;&#x2F;将当前 PC 指向地址 + 0x5c4c，存储在寄存器 x16 中</span><br><span class="line">br x16            &#x2F;&#x2F;跳转到寄存器 x16 所指向的地址</span><br></pre></td></tr></table></figure>
+
+<p>可执行文件的基地址为<code>0x100000000</code> ，因此 x16 寄存器的值为<code>0x100000000 + 0x6410 + 0x4(第二条指令) + 0x5c4c = 0x10000c060</code>。</p>
+<p>找到 Offset 为<code>0xc060</code>的位置，可以看到是在<code>la_symbol_ptr</code>中。</p>
+<p><img src="https://i.loli.net/2021/04/13/bCkBxDTqPj3UZJa.png" alt="image4.png"></p>
+<p>读取指针值为<code>0x1000064c4</code>，继续查找这个位置。</p>
+<p><img src="https://i.loli.net/2021/04/14/3melAirT1USwkpu.png" alt="image5.png"></p>
+<p>发现在<code>__TEXT,__stub_helper</code>中，这里的实现为 2 条汇编指令（这里 MachOView 帮我们将具体的地址计算出来了）:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">ldr w16, #0x1000064cc &#x2F;&#x2F;ldr w16, 8，将 0x1000064cc 地址值的低地址 32 位存储在 w16 寄存器中</span><br><span class="line">b #0x100006428        &#x2F;&#x2F;b 0xffffffffffffff60，跳转到 0x100006428</span><br><span class="line">0x1f, 0x01, 0x00, 0x00</span><br></pre></td></tr></table></figure>
+
+<p>找到<code>0x100006428</code>，其实就是<code>__TEXT,__stub_helper</code>第一行位置。</p>
+<p><img src="https://i.loli.net/2021/04/13/ZxpMO8m74zvhYWd.png" alt="image6.png"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">adr x17, #0x10000d4e0       &#x2F;&#x2F;adr x17, 0x70b8，将当前 PC 指向地址 + 0x70b8，存储在寄存器 x17 中</span><br><span class="line">nop                         &#x2F;&#x2F;无操作</span><br><span class="line">stp x16, x17, [sp, #-0x10]! &#x2F;&#x2F;依次将寄存器 x16、x17 的值存储在 SP - 0x10 和 SP - 0x8，然后将 SP 向低地址扩展 0x10</span><br><span class="line">nop                         &#x2F;&#x2F;无操作</span><br><span class="line">ldr x16, #0x100008000       &#x2F;&#x2F;ldr x16, 0x1bc8，将当前 PC 指向地址 + 0x1bc8，存储在寄存器 x16 中</span><br><span class="line">br x16                      &#x2F;&#x2F;跳转到寄存器 x16 所指向的地址</span><br></pre></td></tr></table></figure>
+
+<p>查看对应地址：</p>
+<p><img src="https://i.loli.net/2021/04/13/ob2vzCEAh4VXSLq.png" alt="image7.png"></p>
+<p><img src="https://i.loli.net/2021/04/13/J4H7eCTyWFZcKd3.png" alt="image8.png"></p>
+<p><code>0x10000d4e0</code> 是<code>__DATA,__data</code>的首地址；<code>0x100008000</code>是<code>dyld_stub_binder</code>函数的指针地址。</p>
+<p>在<code>dyld_stub_binder</code>实现中，x16 寄存器中的值其实是作为<code>lazyBindingInfoOffset</code>传递到了<code>fastBindLazySymbol</code>函数。然后<code>fastBindLazySymbol</code>通过这个偏移值找到 <strong>Lazy Binding Info</strong> 中对应的绑定信息，获取到符号相对于<strong><code>__DATA,__la_symbol_str</code></strong>首地址的 offset。</p>
+<p>当前 x16 寄存器的值为<code>0x11f</code>，加上 Lazy Binding Info 的首地址<code>0x1000102E8</code>，得出<code>0x100010407</code>。</p>
+<p><img src="https://i.loli.net/2021/04/14/YMHztPraX8c91d4.png" alt="image9.png"></p>
+<p>这里符号对应的 offset 需要通过 uleb128 转换（一个字节中 8 Bit，只有 7 Bit 用以存储内容，高位的 1 Bit 等于 1 时代表还有要往后取一个字节，等于 0 时以当前字节为结束），经过转换<code>0x60</code>还是<code>0x60</code>。</p>
+<p>加上<strong><code>__DATA,__la_symbol_str</code></strong>首地址<code>0x10000C000</code>即为<code>0x10000c060</code>，与上文中获取到的地址相符。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>动态库中的 Lazy symbol Pointers 在代码中的体现是以桩代码（stub）的形式，当首次调用桩代码时：</p>
+<p>1.汇编跳转到<code>la_symbol_ptr</code>表中获取到函数地址；</p>
+<p>2.函数地址在<code>stub_helper</code>表中，调起<code>dyld_stub_binder</code>函数；</p>
+<p>3.<code>dyld_stub_binder</code>调用<code>fastBindLazySymbol</code>来绑定符号，查找过程是通过<code>lazyBindingInfoOffset</code>值得到符号信息在 Dynamic Loader Info 中的 <strong>Lazy Binding Info</strong> 的偏移，通过 偏移值，查找到当前符号在<code>la_symbol_ptr</code>中的偏移值，然后就可以绑定函数符号正确的动态库函数地址了。</p>
+<p>当第二次以及之后调用桩代码时，跳转到<code>la_symbol_ptr</code>表中获取到的函数地址即修改后的地址了。</p>
+]]></content>
+      <categories>
+        <category>iOS基础</category>
+      </categories>
+  </entry>
+  <entry>
     <title>AutoreleasePool与编译器优化</title>
     <url>/iOS%E5%9F%BA%E7%A1%80/AutoreleasePool%E4%B8%8E%E7%BC%96%E8%AF%91%E5%99%A8%E4%BC%98%E5%8C%96/</url>
     <content><![CDATA[<h2 id="0x1"><a href="#0x1" class="headerlink" title="0x1"></a>0x1</h2><p>某次偶然发现<code>main.m</code>里的 main 函数有所变化，经过一番查询<a href="#1"><sup>[1]</sup></a>，发现是从 Xcode 11 开始。</p>
