@@ -30,9 +30,14 @@
 <p>5.对应用包大小的影响（善用设计模式，不要有重复代码，减小代码量；如果有资源文件，压缩）</p>
 <h3 id="定制化、插件化"><a href="#定制化、插件化" class="headerlink" title="定制化、插件化"></a>定制化、插件化</h3><p>合理的架构设计实现可插拔</p>
 <p>…</p>
-<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://blog.bihe0832.com/sdk_summary.html" target="_blank" rel="noopener">SDK那些事（总纲）</a></p>
-<p><a href="https://zhuanlan.zhihu.com/p/135315672" target="_blank" rel="noopener">iOS SDK开发二三事</a></p>
-<p><a href="https://segmentfault.com/a/1190000004509668" target="_blank" rel="noopener">移动网络下的性能优化之省点篇</a></p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><p><em>[1]<a href="https://blog.bihe0832.com/sdk_summary.html" target="_blank" rel="noopener">SDK那些事（总纲）</a></em></p>
+</li>
+<li><p><em>[2]<a href="https://zhuanlan.zhihu.com/p/135315672" target="_blank" rel="noopener">iOS SDK开发二三事</a></em></p>
+</li>
+<li><p><em>[3]<a href="https://segmentfault.com/a/1190000004509668" target="_blank" rel="noopener">移动网络下的性能优化之省点篇</a></em></p>
+</li>
+</ul>
 ]]></content>
       <categories>
         <category>学习总结</category>
