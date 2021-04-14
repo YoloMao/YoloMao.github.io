@@ -62,19 +62,19 @@
   };
 </script>
 
-  <meta name="description" content="Category类别你可以使用category来定义现有类的其他方法（甚至是那些源码无法获取的类，而无需子类化）。通常，你可以使用类别将方法添加到现有类中，比如Cocoa框架中定义的方法那样。所添加的方法由子类继承，并且在运行时与类的原始方法没有区别。您还可以使用自己类的类别来：">
+  <meta name="description" content="稳定性1.确定代码规范、命名规范（包括资源文件）、注释规范；接口设计合理，多参数改成以对象的形式传入，参数合法性校验 2.防止符号重复，用加前缀的方式；如果必须用到三方库中的实现（如数据库），则抽取出需要的实现代码并加上前缀">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Category和Extension">
-<meta property="og:url" content="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/index.html">
+<meta property="og:title" content="iOS SDK 开发中注意事项-学习总结">
+<meta property="og:url" content="https://yolomao.github.io/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/iOS%20SDK%20%E5%BC%80%E5%8F%91%E4%B8%AD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="YoloMao的博客">
-<meta property="og:description" content="Category类别你可以使用category来定义现有类的其他方法（甚至是那些源码无法获取的类，而无需子类化）。通常，你可以使用类别将方法添加到现有类中，比如Cocoa框架中定义的方法那样。所添加的方法由子类继承，并且在运行时与类的原始方法没有区别。您还可以使用自己类的类别来：">
+<meta property="og:description" content="稳定性1.确定代码规范、命名规范（包括资源文件）、注释规范；接口设计合理，多参数改成以对象的形式传入，参数合法性校验 2.防止符号重复，用加前缀的方式；如果必须用到三方库中的实现（如数据库），则抽取出需要的实现代码并加上前缀">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2020-01-13T08:03:55.581Z">
-<meta property="article:modified_time" content="2020-01-13T08:27:51.777Z">
+<meta property="article:published_time" content="2021-04-14T15:14:06.022Z">
+<meta property="article:modified_time" content="2021-04-14T15:15:52.395Z">
 <meta property="article:author" content="YoloMao">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/">
+<link rel="canonical" href="https://yolomao.github.io/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/iOS%20SDK%20%E5%BC%80%E5%8F%91%E4%B8%AD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/">
 
 
 <script id="page-configurations">
@@ -86,7 +86,7 @@
   };
 </script>
 
-  <title>Category和Extension | YoloMao的博客</title>
+  <title>iOS SDK 开发中注意事项-学习总结 | YoloMao的博客</title>
   
 
 
@@ -186,7 +186,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/iOS%E5%9F%BA%E7%A1%80/Category%E5%92%8CExtension/">
+    <link itemprop="mainEntityOfPage" href="https://yolomao.github.io/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/iOS%20SDK%20%E5%BC%80%E5%8F%91%E4%B8%AD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/uploads/avatar.png">
@@ -199,7 +199,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          Category和Extension
+          iOS SDK 开发中注意事项-学习总结
         </h1>
 
         <div class="post-meta">
@@ -210,7 +210,7 @@
               <span class="post-meta-item-text">发表于</span>
               
 
-              <time title="创建时间：2020-01-13 16:03:55 / 修改时间：16:27:51" itemprop="dateCreated datePublished" datetime="2020-01-13T16:03:55+08:00">2020-01-13</time>
+              <time title="创建时间：2021-04-14 23:14:06 / 修改时间：23:15:52" itemprop="dateCreated datePublished" datetime="2021-04-14T23:14:06+08:00">2021-04-14</time>
             </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -218,8 +218,8 @@
               </span>
               <span class="post-meta-item-text">分类于</span>
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/iOS%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index">
-                    <span itemprop="name">iOS基础</span>
+                  <a href="/categories/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/" itemprop="url" rel="index">
+                    <span itemprop="name">学习总结</span>
                   </a>
                 </span>
             </span>
@@ -235,36 +235,36 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h3 id="Category类别"><a href="#Category类别" class="headerlink" title="Category类别"></a>Category类别</h3><p>你可以使用<a href="https://developer.apple.com/library/archive/documentation/General/Conceptual/DevPedia-CocoaCore/Category.html" target="_blank" rel="noopener">category</a>来定义现有类的其他方法（甚至是那些源码无法获取的类，而无需子类化）。通常，你可以使用类别将方法添加到现有类中，比如<code>Cocoa</code>框架中定义的方法那样。所添加的方法由子类继承，并且在运行时与类的原始方法没有区别。您还可以使用自己类的类别来：</p>
+        <h3 id="稳定性"><a href="#稳定性" class="headerlink" title="稳定性"></a>稳定性</h3><p>1.确定代码规范、命名规范（包括资源文件）、注释规范；接口设计合理，多参数改成以对象的形式传入，参数合法性校验</p>
+<p>2.防止符号重复，用加前缀的方式；如果必须用到三方库中的实现（如数据库），则抽取出需要的实现代码并加上前缀</p>
 <a id="more"></a>
 
-<ol>
-<li>将自己的类的实现分发到单独的源文件中-例如，您可以将一个大类的方法分为几个类别，然后将每个类别放入不同的文件中。</li>
-<li>声明私有方法。</li>
-</ol>
-<p>通过在类别名称下的接口文件中声明方法并在相同名称下的实现文件中定义方法，可以将方法添加到类中。类别名称表示，方法是对在别处声明的类的扩展，而不是新的类。</p>
-<h3 id="Extension扩展"><a href="#Extension扩展" class="headerlink" title="Extension扩展"></a>Extension扩展</h3><p><a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/CustomizingExistingClasses/CustomizingExistingClasses.html" target="_blank" rel="noopener">Class Extensions Extend the Internal Implementation</a></p>
-<p>类扩展与类别具有某些相似性，但是只能将其添加到您在编译时拥有源代码的类中（该类与该类扩展同时进行编译）。由类扩展声明的方法是在原始类的<code>@implementation</code>块中实现的，因此，例如，您不能在框架类（例如<code>Cocoa</code>，或<code>NSString</code>之类的<code>Cocoa Touch</code>类）上声明类扩展。</p>
-<h3 id="问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？"><a href="#问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？" class="headerlink" title="问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？"></a>问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？</h3><h5 id="参考："><a href="#参考：" class="headerlink" title="参考："></a>参考：</h5><p><a href="https://tech.meituan.com/2015/03/03/diveintocategory.html" target="_blank" rel="noopener">深入理解Objective-C:Category</a></p>
-<p><a href="https://juejin.im/post/5aef0a3b518825670f7bc0f3" target="_blank" rel="noopener">iOS底层原理总结-Category的本质</a></p>
-<p>分类是<code>Objective-C 2.0</code>之后添加的语言特性，主要作用是给已经存在的类添加方法。</p>
-<p>扩展是对类私有变量和私有方法的声明。</p>
-<h5 id="分类的局限性："><a href="#分类的局限性：" class="headerlink" title="分类的局限性："></a>分类的局限性：</h5><ol>
-<li>分类可以添加属性，但不能自动生成成员变量以及其set/get方法，可以通过关联对象来解决。</li>
-<li>如果分类中的方法和原有方法同名，运行时会优先调用category中的方法，覆盖掉类中原有的方法（调用顺序category-&gt;本类-&gt;父类）。</li>
-<li>如果多个category存在同名的方法，最后一个参与编译的分类中的实现将会被调用。</li>
-</ol>
-<h5 id="结构体："><a href="#结构体：" class="headerlink" title="结构体："></a>结构体：</h5><ol>
-<li>类的名字<code>name</code></li>
-<li>类<code>cls</code></li>
-<li>category中所有给类添加的实例方法的列表<code>instanceMethods</code></li>
-<li>category中所有添加的类方法的列表<code>classMethods</code></li>
-<li>category实现的所有协议的列表<code>protocols</code></li>
-<li>category中添加的所有属性<code>instanceProperties</code></li>
-</ol>
-<p>分类的结构体如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">struct category_t &#123;</span><br><span class="line">    const char *name;</span><br><span class="line">    classref_t cls;</span><br><span class="line">    struct method_list_t *instanceMethods; &#x2F;&#x2F; 对象方法</span><br><span class="line">    struct method_list_t *classMethods; &#x2F;&#x2F; 类方法</span><br><span class="line">    struct protocol_list_t *protocols; &#x2F;&#x2F; 协议</span><br><span class="line">    struct property_list_t *instanceProperties; &#x2F;&#x2F; 属性</span><br><span class="line">    &#x2F;&#x2F; Fields below this point are not always present on disk.</span><br><span class="line">    struct property_list_t *_classProperties;</span><br><span class="line"></span><br><span class="line">    method_list_t *methodsForMeta(bool isMeta) &#123;</span><br><span class="line">        if (isMeta) return classMethods;</span><br><span class="line">        else return instanceMethods;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    property_list_t *propertiesForMeta(bool isMeta, struct header_info *hi);</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
+<p>3.发版本前需要对不同系统版本、不同机型进行测试</p>
+<p>4.兼容旧版本（数据库兼容、API 兼容）</p>
+<p>5.写好接入文档，提供 Demo；对常见使用问题做记录，遇到问题及时解决；写好版本更新说明</p>
+<p>6.异常接入如参数错误、配置错误，通过打印日志提醒接入方；是否需要提供接入方开启 SDK Debug 日志入口？</p>
+<p>7.兼容其他市面上的 SDK，避免出现异常情况</p>
+<h3 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h3><p>1.HTTPS 请求数据防篡改，是否可以明文传输（模仿 SSL 协议，非对称加密 + 对称加密 + hash）</p>
+<p>2.本地缓存内容防篡改、防获取（加密）</p>
+<p>3.重要代码混淆加固</p>
+<p>4.反逆向（是否需要检测当前是越狱环境？）</p>
+<h3 id="无感"><a href="#无感" class="headerlink" title="无感"></a>无感</h3><p>1.对使用内存的影响（防止出现内存泄漏的情况，降低内存峰值，提高内存利用率，处理内存警告；内存中的缓存数据设置上限大小）</p>
+<p>2.对硬盘内存的影响（缓存数据设置上限大小、过期时间等，定制清理策略）</p>
+<p>3.对CPU/主线程的影响</p>
+<p>(1)使用多线程的方式调用，控制好并发</p>
+<p>(2)一般 SDK 创建一个固定的线程，任务调度都丢到这个线程处理，处理完成后异步回到主线程更新</p>
+<p>4.对耗电量的影响（网络请求、磁盘 IO、蓝牙、定位）</p>
+<p>对于网络请求和磁盘 IO：</p>
+<p>(1)减少、压缩网络数据，不要频繁地进行网络请求，尽量合并请求，预请求，让设备尽早进入闲置模式降低功耗；</p>
+<p>(2)设置合适的请求超时时间，重连次数，在网络异常情况下取消请求；</p>
+<p>(3)避免轮询请求；</p>
+<p>(4)减少小数据磁盘 IO 次数，先放在内存中，再选择合适的时机写入磁盘；</p>
+<p>5.对应用包大小的影响（善用设计模式，不要有重复代码，减小代码量；如果有资源文件，压缩）</p>
+<h3 id="定制化、插件化"><a href="#定制化、插件化" class="headerlink" title="定制化、插件化"></a>定制化、插件化</h3><p>合理的架构设计实现可插拔</p>
+<p>…</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://blog.bihe0832.com/sdk_summary.html" target="_blank" rel="noopener">SDK那些事（总纲）</a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/135315672" target="_blank" rel="noopener">iOS SDK开发二三事</a></p>
+<p><a href="https://segmentfault.com/a/1190000004509668" target="_blank" rel="noopener">移动网络下的性能优化之省点篇</a></p>
 
     </div>
 
@@ -283,10 +283,10 @@
   <script src="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.min.js"></script>
   <link rel="stylesheet" type="text/css" href="http://jslibs.wuxubj.cn/sweetalert_mini/sweetalert.mini.css">
 
-  <p><span>本文标题:</span>Category和Extension</a></p>
+  <p><span>本文标题:</span>iOS SDK 开发中注意事项-学习总结</a></p>
   <p><span>文章作者:</span>YoloMao</a></p>
-  <p><span>发布时间:</span>2020年01月13日 - 16:03:55</p>
-  <p><span>最后更新:</span>2020年01月13日 - 16:27:51</p>
+  <p><span>发布时间:</span>2021年04月14日 - 23:14:06</p>
+  <p><span>最后更新:</span>2021年04月14日 - 23:15:52</p>
   
   <p><span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="https://creativecommons.org/licenses/by-nc-nd/4.0/" target="_blank" title="Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)">署名-非商业性使用-禁止演绎 4.0 国际</a> 转载请保留原文链接及作者。</p>  
 </div>
@@ -318,13 +318,10 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/iOS%E5%9F%BA%E7%A1%80/Tagged%20Pointer%20in%20iOS/" rel="prev" title="Tagged Pointer in iOS">
-      <i class="fa fa-chevron-left"></i> Tagged Pointer in iOS
+    <a href="/iOS%E5%9F%BA%E7%A1%80/%E4%BB%8E%E6%B1%87%E7%BC%96%E7%9C%8B%20lazy%20%E7%AC%A6%E5%8F%B7%E7%BB%91%E5%AE%9A/" rel="prev" title="从汇编看 lazy 符号绑定">
+      <i class="fa fa-chevron-left"></i> 从汇编看 lazy 符号绑定
     </a></div>
-      <div class="post-nav-item">
-    <a href="/iOS%E5%9F%BA%E7%A1%80/AssociatedObject%E5%85%B3%E8%81%94%E5%AF%B9%E8%B1%A1/" rel="next" title="AssociatedObject关联对象">
-      AssociatedObject关联对象 <i class="fa fa-chevron-right"></i>
-    </a></div>
+      <div class="post-nav-item"></div>
     </div>
       </footer>
     
@@ -384,7 +381,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Category类别"><span class="nav-number">1.</span> <span class="nav-text">Category类别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Extension扩展"><span class="nav-number">2.</span> <span class="nav-text">Extension扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？"><span class="nav-number">3.</span> <span class="nav-text">问题：分类和扩展有什么区别？可以分别用来做什么？分类有哪些局限性？分类的结构体里面有哪些成员？</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#参考："><span class="nav-number">3.0.1.</span> <span class="nav-text">参考：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#分类的局限性："><span class="nav-number">3.0.2.</span> <span class="nav-text">分类的局限性：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#结构体："><span class="nav-number">3.0.3.</span> <span class="nav-text">结构体：</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#稳定性"><span class="nav-number">1.</span> <span class="nav-text">稳定性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#安全性"><span class="nav-number">2.</span> <span class="nav-text">安全性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#无感"><span class="nav-number">3.</span> <span class="nav-text">无感</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#定制化、插件化"><span class="nav-number">4.</span> <span class="nav-text">定制化、插件化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-number">5.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
