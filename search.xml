@@ -59,7 +59,7 @@
 </tr>
 <tr>
 <td>__TEXT,__ustring</td>
-<td>非英文字符串转 Unicode 编码，<strong>Unicode 有 1-4 个字节，如何确定字符是 2 个字节的中文还是 4 个字节的中文？</strong></td>
+<td>非英文字符串转 Unicode 编码，以 0x0000 为结束符</td>
 </tr>
 <tr>
 <td>__TEXT,__entitlements</td>
