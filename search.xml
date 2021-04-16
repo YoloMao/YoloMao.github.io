@@ -1,49 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>iOS SDK 开发中注意事项-学习总结</title>
-    <url>/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/iOS%20SDK%20%E5%BC%80%E5%8F%91%E4%B8%AD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/</url>
-    <content><![CDATA[<h3 id="稳定性"><a href="#稳定性" class="headerlink" title="稳定性"></a>稳定性</h3><p>1.确定代码规范、命名规范（包括资源文件）、注释规范；接口设计合理，多参数改成以对象的形式传入，参数合法性校验</p>
-<p>2.防止符号重复，用加前缀的方式；如果必须用到三方库中的实现（如数据库），则抽取出需要的实现代码并加上前缀</p>
-<a id="more"></a>
-
-<p>3.发版本前需要对不同系统版本、不同机型进行测试</p>
-<p>4.兼容旧版本（数据库兼容、API 兼容）</p>
-<p>5.写好接入文档，提供 Demo；对常见使用问题做记录，遇到问题及时解决；写好版本更新说明</p>
-<p>6.异常接入如参数错误、配置错误，通过打印日志提醒接入方；是否需要提供接入方开启 SDK Debug 日志入口？</p>
-<p>7.兼容其他市面上的 SDK，避免出现异常情况</p>
-<h3 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h3><p>1.HTTPS 请求数据防篡改，是否可以明文传输（模仿 SSL 协议，非对称加密 + 对称加密 + hash）</p>
-<p>2.本地缓存内容防篡改、防获取（加密）</p>
-<p>3.重要代码混淆加固</p>
-<p>4.反逆向（是否需要检测当前是越狱环境？）</p>
-<h3 id="无感"><a href="#无感" class="headerlink" title="无感"></a>无感</h3><p>1.对使用内存的影响（防止出现内存泄漏的情况，降低内存峰值，提高内存利用率，处理内存警告；内存中的缓存数据设置上限大小）</p>
-<p>2.对硬盘内存的影响（缓存数据设置上限大小、过期时间等，定制清理策略）</p>
-<p>3.对CPU/主线程的影响</p>
-<p>(1)使用多线程的方式调用，控制好并发</p>
-<p>(2)一般 SDK 创建一个固定的线程，任务调度都丢到这个线程处理，处理完成后异步回到主线程更新</p>
-<p>4.对耗电量的影响（网络请求、磁盘 IO、蓝牙、定位）</p>
-<p>对于网络请求和磁盘 IO：</p>
-<p>(1)减少、压缩网络数据，不要频繁地进行网络请求，尽量合并请求，预请求，让设备尽早进入闲置模式降低功耗；</p>
-<p>(2)设置合适的请求超时时间，重连次数，在网络异常情况下取消请求；</p>
-<p>(3)避免轮询请求；</p>
-<p>(4)减少小数据磁盘 IO 次数，先放在内存中，再选择合适的时机写入磁盘；</p>
-<p>5.对应用包大小的影响（善用设计模式，不要有重复代码，减小代码量；如果有资源文件，压缩）</p>
-<h3 id="定制化、插件化"><a href="#定制化、插件化" class="headerlink" title="定制化、插件化"></a>定制化、插件化</h3><p>合理的架构设计实现可插拔</p>
-<p>…</p>
-<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
-<li><p><em>[1]<a href="https://blog.bihe0832.com/sdk_summary.html" target="_blank" rel="noopener">SDK那些事（总纲）</a></em></p>
-</li>
-<li><p><em>[2]<a href="https://zhuanlan.zhihu.com/p/135315672" target="_blank" rel="noopener">iOS SDK开发二三事</a></em></p>
-</li>
-<li><p><em>[3]<a href="https://segmentfault.com/a/1190000004509668" target="_blank" rel="noopener">移动网络下的性能优化之省点篇</a></em></p>
-</li>
-</ul>
-]]></content>
-      <categories>
-        <category>学习总结</category>
-      </categories>
-  </entry>
-  <entry>
     <title>Mach-O 文件解析</title>
     <url>/iOS%E5%9F%BA%E7%A1%80/Mach-O%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90/</url>
     <content><![CDATA[<h3 id="Mach-O-文件解析"><a href="#Mach-O-文件解析" class="headerlink" title="Mach-O 文件解析"></a>Mach-O 文件解析</h3><a id="more"></a>
@@ -166,7 +123,7 @@
 </tr>
 <tr>
 <td>__DATA,__objc_const</td>
-<td>OC 常量表，<a href="#_method_list_t">method_list_t</a>、<a href="#_ivar_list_t">ivar_list_t</a>、<a href="#_class_ro_t">class_ro_t</a>、<a href="#_prop_list_t">prop_list_t</a>、<a href="#_category_t">category_t</a> 等等结构体对象</td>
+<td>OC 常量表，<a href="#\_method_list_t">method_list_t</a>、<a href="#\_ivar_list_t">ivar_list_t</a>、<a href="#\_class_ro_t">class_ro_t</a>、<a href="#\_prop_list_t">prop_list_t</a>、<a href="#\_category_t">category_t</a> 等等结构体对象</td>
 </tr>
 <tr>
 <td>__DATA,__objc_selrefs</td>
@@ -186,15 +143,15 @@
 </tr>
 <tr>
 <td>__DATA,__objc_ivar</td>
-<td><a href="#_ivar_t">ivar_t</a> 中的 offset，4 字节存储，当前 ivar 变量基于对象地址的偏移量</td>
+<td><a href="#\_ivar_t">ivar_t</a> 中的 offset，4 字节存储，当前 ivar 变量基于对象地址的偏移量</td>
 </tr>
 <tr>
 <td>__DATA,__objc_data</td>
-<td><a href="#_class_t">class_t</a> 结构体对象表</td>
+<td><a href="#\_class_t">class_t</a> 结构体对象表</td>
 </tr>
 <tr>
 <td>__DATA,__data</td>
-<td><a href="#_protocol_t">protocol_t</a> 结构体对象表</td>
+<td><a href="#\_protocol_t">protocol_t</a> 结构体对象表</td>
 </tr>
 <tr>
 <td>Dynamic Loader Info</td>
@@ -281,7 +238,7 @@
 
 
 
-<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><h4 id="结构体对象定义"><a href="#结构体对象定义" class="headerlink" title="结构体对象定义"></a>结构体对象定义</h4><p>mach_header_64:<span id="\mach_header_64"> </span></p>
+<h3 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h3><h4 id="结构体对象定义"><a href="#结构体对象定义" class="headerlink" title="结构体对象定义"></a>结构体对象定义</h4><p>mach_header_64:<span id="mach_header_64"> </span></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * The 64-bit mach header appears at the very beginning of object files for</span></span><br><span class="line"><span class="comment"> * 64-bit architectures.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">mach_header_64</span> &#123;</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	magic;		<span class="comment">/* mach magic number identifier */</span></span><br><span class="line">	<span class="keyword">cpu_type_t</span>	cputype;	<span class="comment">/* cpu specifier */</span></span><br><span class="line">	<span class="keyword">cpu_subtype_t</span>	cpusubtype;	<span class="comment">/* machine specifier */</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	filetype;	<span class="comment">/* type of file */</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	ncmds;		<span class="comment">/* number of load commands */</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	sizeofcmds;	<span class="comment">/* the size of all the load commands */</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	flags;		<span class="comment">/* flags */</span></span><br><span class="line">	<span class="keyword">uint32_t</span>	reserved;	<span class="comment">/* reserved */</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* Constant for the magic field of the mach_header_64 (64-bit architectures) */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_MAGIC_64 0xfeedfacf <span class="comment">/* the 64-bit mach magic number */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MH_CIGAM_64 0xcffaedfe <span class="comment">/* NXSwapInt(MH_MAGIC_64) */</span></span></span><br></pre></td></tr></table></figure>
 
 <p>_prop_list_t:<span id="\_prop_list_t"> </span></p>
@@ -322,13 +279,13 @@
 
 
 
-<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p><span id="#size -mlx <path>">[1]</span></p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p><span id="size -mlx <path>">[1]</span></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">YoloMaodeMBP:Desktop Mao$ <span class="built_in">size</span> -mlx machofile</span><br><span class="line">Segment __PAGEZERO: <span class="number">0x100000000</span> (vmaddr <span class="number">0x0</span> fileoff <span class="number">0</span>)</span><br><span class="line">Segment __TEXT: <span class="number">0x130c000</span> (vmaddr <span class="number">0x100000000</span> fileoff <span class="number">0</span>)</span><br><span class="line">	Section __text: <span class="number">0x10aee5c</span> (addr <span class="number">0x100006fc8</span> offset <span class="number">28616</span>)</span><br><span class="line">	Section __stubs: <span class="number">0x2b14</span> (addr <span class="number">0x1010b5e24</span> offset <span class="number">17522212</span>)</span><br><span class="line">	Section __stub_helper: <span class="number">0x2ac0</span> (addr <span class="number">0x1010b8938</span> offset <span class="number">17533240</span>)</span><br><span class="line">	Section __gcc_except_tab: <span class="number">0x3ddc8</span> (addr <span class="number">0x1010bb3f8</span> offset <span class="number">17544184</span>)</span><br><span class="line">	Section __objc_methname: <span class="number">0x6b63d</span> (addr <span class="number">0x1010f91c0</span> offset <span class="number">17797568</span>)</span><br><span class="line">	Section __cstring: <span class="number">0xb7f82</span> (addr <span class="number">0x101164800</span> offset <span class="number">18237440</span>)</span><br><span class="line">	Section __objc_classname: <span class="number">0x82c9</span> (addr <span class="number">0x10121c782</span> offset <span class="number">18990978</span>)</span><br><span class="line">	Section __objc_methtype: <span class="number">0x2a846</span> (addr <span class="number">0x101224a4b</span> offset <span class="number">19024459</span>)</span><br><span class="line">	Section __const: <span class="number">0x96120</span> (addr <span class="number">0x10124f2a0</span> offset <span class="number">19198624</span>)</span><br><span class="line">	Section __ustring: <span class="number">0x616c</span> (addr <span class="number">0x1012e53c0</span> offset <span class="number">19813312</span>)</span><br><span class="line">	Section __unwind_info: <span class="number">0x2089c</span> (addr <span class="number">0x1012eb52c</span> offset <span class="number">19838252</span>)</span><br><span class="line">	Section __eh_frame: <span class="number">0x22c</span> (addr <span class="number">0x10130bdc8</span> offset <span class="number">19971528</span>)</span><br><span class="line">	total <span class="number">0x130501a</span></span><br><span class="line">Segment __DATA: <span class="number">0x25c000</span> (vmaddr <span class="number">0x10130c000</span> fileoff <span class="number">19972096</span>)</span><br><span class="line">	Section __got: <span class="number">0x1218</span> (addr <span class="number">0x10130c000</span> offset <span class="number">19972096</span>)</span><br><span class="line">	Section __la_symbol_ptr: <span class="number">0x1cb8</span> (addr <span class="number">0x10130d218</span> offset <span class="number">19976728</span>)</span><br><span class="line">	Section __mod_init_func: <span class="number">0x250</span> (addr <span class="number">0x10130eed0</span> offset <span class="number">19984080</span>)</span><br><span class="line">	Section __const: <span class="number">0x86c28</span> (addr <span class="number">0x10130f120</span> offset <span class="number">19984672</span>)</span><br><span class="line">	Section __cfstring: <span class="number">0x36260</span> (addr <span class="number">0x101395d48</span> offset <span class="number">20536648</span>)</span><br><span class="line">	Section __objc_classlist: <span class="number">0x27d8</span> (addr <span class="number">0x1013cbfa8</span> offset <span class="number">20758440</span>)</span><br><span class="line">	Section __objc_nlclslist: <span class="number">0x68</span> (addr <span class="number">0x1013ce780</span> offset <span class="number">20768640</span>)</span><br><span class="line">	Section __objc_catlist: <span class="number">0x268</span> (addr <span class="number">0x1013ce7e8</span> offset <span class="number">20768744</span>)</span><br><span class="line">	Section __objc_nlcatlist: <span class="number">0x20</span> (addr <span class="number">0x1013cea50</span> offset <span class="number">20769360</span>)</span><br><span class="line">	Section __objc_protolist: <span class="number">0x760</span> (addr <span class="number">0x1013cea70</span> offset <span class="number">20769392</span>)</span><br><span class="line">	Section __objc_imageinfo: <span class="number">0x8</span> (addr <span class="number">0x1013cf1d0</span> offset <span class="number">20771280</span>)</span><br><span class="line">	Section __objc_const: <span class="number">0x12d648</span> (addr <span class="number">0x1013cf1d8</span> offset <span class="number">20771288</span>)</span><br><span class="line">	Section __objc_selrefs: <span class="number">0x1b068</span> (addr <span class="number">0x1014fc820</span> offset <span class="number">22005792</span>)</span><br><span class="line">	Section __objc_protorefs: <span class="number">0x98</span> (addr <span class="number">0x101517888</span> offset <span class="number">22116488</span>)</span><br><span class="line">	Section __objc_classrefs: <span class="number">0x2840</span> (addr <span class="number">0x101517920</span> offset <span class="number">22116640</span>)</span><br><span class="line">	Section __objc_superrefs: <span class="number">0x1660</span> (addr <span class="number">0x10151a160</span> offset <span class="number">22126944</span>)</span><br><span class="line">	Section __objc_ivar: <span class="number">0x6010</span> (addr <span class="number">0x10151b7c0</span> offset <span class="number">22132672</span>)</span><br><span class="line">	Section __objc_data: <span class="number">0x18e70</span> (addr <span class="number">0x1015217d0</span> offset <span class="number">22157264</span>)</span><br><span class="line">	Section __data: <span class="number">0x1ac6c</span> (addr <span class="number">0x10153a640</span> offset <span class="number">22259264</span>)</span><br><span class="line">	Section __bss: <span class="number">0xdb78</span> (addr <span class="number">0x1015552b0</span> offset <span class="number">0</span>)</span><br><span class="line">	Section __common: <span class="number">0x4400</span> (addr <span class="number">0x101563000</span> offset <span class="number">0</span>)</span><br><span class="line">	total <span class="number">0x25b224</span></span><br><span class="line">Segment __LINKEDIT: <span class="number">0xb44000</span> (vmaddr <span class="number">0x101568000</span> fileoff <span class="number">22380544</span>)</span><br><span class="line">total <span class="number">0x1020ac000</span></span><br></pre></td></tr></table></figure>
 
-<p><span id="#nm -nm <path> | grep 符号">[2]</span></p>
+<p><span id="nm -nm <path> | grep 符号">[2]</span></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">YoloMaodeMBP:Desktop Mao$ nm -nm machofile | grep clearDiskCacheExceptVideoUrlArray</span><br><span class="line"><span class="number">00000001000</span>d2d54 (__TEXT,__text) non-external +[XHLaunchAd clearDiskCacheExceptVideoUrlArray:]</span><br><span class="line"><span class="number">00000001000</span>ddc10 (__TEXT,__text) non-external +[XHLaunchAdCache clearDiskCacheExceptVideoUrlArray:]</span><br><span class="line"><span class="number">00000001000</span>ddd00 (__TEXT,__text) non-external ___53+[XHLaunchAdCache clearDiskCacheExceptVideoUrlArray:]_block_invoke</span><br><span class="line"><span class="number">00000001000</span>ddf84 (__TEXT,__text) non-external ___53+[XHLaunchAdCache clearDiskCacheExceptVideoUrlArray:]_block_invoke_2</span><br></pre></td></tr></table></figure>
 
-<p><span id="#otool <path> -Vt -p 函数符号">[3]</span></p>
+<p><span id="otool <path> -Vt -p 函数符号">[3]</span></p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">YoloMaodeMBP:Desktop Mao$ otool machofile -Vt -p '-[ShowInfoView show]'</span><br><span class="line">machofile:</span><br><span class="line">(__TEXT,__text) section</span><br><span class="line">-[ShowInfoView show]:</span><br><span class="line"><span class="number">0000000100008240</span>	sub	sp, sp, #<span class="number">0x130</span></span><br><span class="line"><span class="number">0000000100008244</span>	stp	x28, x27, [sp, #<span class="number">0x110</span>]</span><br><span class="line"><span class="number">0000000100008248</span>	stp	x29, x30, [sp, #<span class="number">0x120</span>]</span><br><span class="line"><span class="number">000000010000824</span>c	add	x29, sp, #<span class="number">0x120</span></span><br><span class="line"><span class="number">0000000100008250</span>	mov	x8, #<span class="number">0x0</span></span><br><span class="line"><span class="number">0000000100008254</span>	adrp	x9, <span class="number">4868</span> ; <span class="number">0x10130c000</span></span><br><span class="line"><span class="number">0000000100008258</span>	ldr	x9, [x9, #<span class="number">0xec8</span>] ; literal pool symbol address: ___stack_chk_guard</span><br><span class="line"><span class="number">000000010000825</span>c	ldr	x9, [x9]</span><br><span class="line"><span class="number">0000000100008260</span>	stur	x9, [x29, #<span class="number">-0x18</span>]</span><br><span class="line"><span class="number">0000000100008264</span>	stur	x0, [x29, #<span class="number">-0x40</span>]</span><br><span class="line"><span class="number">0000000100008268</span>	stur	x1, [x29, #<span class="number">-0x48</span>]</span><br></pre></td></tr></table></figure>
 
 
@@ -343,6 +300,49 @@
 ]]></content>
       <categories>
         <category>iOS基础</category>
+      </categories>
+  </entry>
+  <entry>
+    <title>iOS SDK 开发中注意事项-学习总结</title>
+    <url>/%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/iOS%20SDK%20%E5%BC%80%E5%8F%91%E4%B8%AD%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9-%E5%AD%A6%E4%B9%A0%E6%80%BB%E7%BB%93/</url>
+    <content><![CDATA[<h3 id="稳定性"><a href="#稳定性" class="headerlink" title="稳定性"></a>稳定性</h3><p>1.确定代码规范、命名规范（包括资源文件）、注释规范；接口设计合理，多参数改成以对象的形式传入，参数合法性校验</p>
+<p>2.防止符号重复，用加前缀的方式；如果必须用到三方库中的实现（如数据库），则抽取出需要的实现代码并加上前缀</p>
+<a id="more"></a>
+
+<p>3.发版本前需要对不同系统版本、不同机型进行测试</p>
+<p>4.兼容旧版本（数据库兼容、API 兼容）</p>
+<p>5.写好接入文档，提供 Demo；对常见使用问题做记录，遇到问题及时解决；写好版本更新说明</p>
+<p>6.异常接入如参数错误、配置错误，通过打印日志提醒接入方；是否需要提供接入方开启 SDK Debug 日志入口？</p>
+<p>7.兼容其他市面上的 SDK，避免出现异常情况</p>
+<h3 id="安全性"><a href="#安全性" class="headerlink" title="安全性"></a>安全性</h3><p>1.HTTPS 请求数据防篡改，是否可以明文传输（模仿 SSL 协议，非对称加密 + 对称加密 + hash）</p>
+<p>2.本地缓存内容防篡改、防获取（加密）</p>
+<p>3.重要代码混淆加固</p>
+<p>4.反逆向（是否需要检测当前是越狱环境？）</p>
+<h3 id="无感"><a href="#无感" class="headerlink" title="无感"></a>无感</h3><p>1.对使用内存的影响（防止出现内存泄漏的情况，降低内存峰值，提高内存利用率，处理内存警告；内存中的缓存数据设置上限大小）</p>
+<p>2.对硬盘内存的影响（缓存数据设置上限大小、过期时间等，定制清理策略）</p>
+<p>3.对CPU/主线程的影响</p>
+<p>(1)使用多线程的方式调用，控制好并发</p>
+<p>(2)一般 SDK 创建一个固定的线程，任务调度都丢到这个线程处理，处理完成后异步回到主线程更新</p>
+<p>4.对耗电量的影响（网络请求、磁盘 IO、蓝牙、定位）</p>
+<p>对于网络请求和磁盘 IO：</p>
+<p>(1)减少、压缩网络数据，不要频繁地进行网络请求，尽量合并请求，预请求，让设备尽早进入闲置模式降低功耗；</p>
+<p>(2)设置合适的请求超时时间，重连次数，在网络异常情况下取消请求；</p>
+<p>(3)避免轮询请求；</p>
+<p>(4)减少小数据磁盘 IO 次数，先放在内存中，再选择合适的时机写入磁盘；</p>
+<p>5.对应用包大小的影响（善用设计模式，不要有重复代码，减小代码量；如果有资源文件，压缩）</p>
+<h3 id="定制化、插件化"><a href="#定制化、插件化" class="headerlink" title="定制化、插件化"></a>定制化、插件化</h3><p>合理的架构设计实现可插拔</p>
+<p>…</p>
+<h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><ul>
+<li><p><em>[1]<a href="https://blog.bihe0832.com/sdk_summary.html" target="_blank" rel="noopener">SDK那些事（总纲）</a></em></p>
+</li>
+<li><p><em>[2]<a href="https://zhuanlan.zhihu.com/p/135315672" target="_blank" rel="noopener">iOS SDK开发二三事</a></em></p>
+</li>
+<li><p><em>[3]<a href="https://segmentfault.com/a/1190000004509668" target="_blank" rel="noopener">移动网络下的性能优化之省点篇</a></em></p>
+</li>
+</ul>
+]]></content>
+      <categories>
+        <category>学习总结</category>
       </categories>
   </entry>
   <entry>
