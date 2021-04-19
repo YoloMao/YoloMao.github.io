@@ -349,7 +349,7 @@
   <entry>
     <title>从汇编看 lazy 符号绑定</title>
     <url>/iOS%E5%9F%BA%E7%A1%80/%E4%BB%8E%E6%B1%87%E7%BC%96%E7%9C%8B%20lazy%20%E7%AC%A6%E5%8F%B7%E7%BB%91%E5%AE%9A/</url>
-    <content><![CDATA[<h3 id="探索过程"><a href="#探索过程" class="headerlink" title="探索过程"></a>探索过程</h3><p>在 Mach-O 中，如果<code>__TEXT,__text</code> 用到了外部符号，比如 NSLog、objc_retain、printf 等等，其实是以 PIC 的方式调用。让我们利用 MachOView 从汇编层面看一下。</p>
+    <content><![CDATA[<h3 id="探索过程"><a href="#探索过程" class="headerlink" title="探索过程"></a>探索过程</h3><p>在 Mach-O 中，如果<code>__TEXT,__text</code> 用到了外部符号，比如<code>NSLog、objc_retain、printf</code>等等，其实是以 PIC 的方式调用。让我们利用 MachOView 从汇编层面看一下。</p>
 <a id="more"></a>
 
 <p>如下是 main 函数的汇编代码：</p>
@@ -401,7 +401,7 @@
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="title">int</span> <span class="params">(*old_test)</span><span class="params">(<span class="keyword">void</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ltest</span><span class="params">(<span class="keyword">void</span>)</span> </span>&#123;</span><br><span class="line">    NSLog(@<span class="string">"llllll test"</span>);</span><br><span class="line">    old_test(); <span class="comment">//2.这一步调用之后，dyld_stub_binder 又将 la_symbol_ptr 中的指针指向了 ASDK 的原始实现</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)viewDidLoad &#123;</span><br><span class="line">    [super viewDidLoad];</span><br><span class="line">  </span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">rebinding</span> <span class="title">rebinding</span> = &#123;</span><span class="string">"test"</span>, ltest, (<span class="keyword">void</span> *)&amp;old_test&#125;;</span><br><span class="line">    rebind_symbols((struct rebinding[<span class="number">1</span>])&#123;rebinding&#125;, <span class="number">1</span>);<span class="comment">//1.这里，test 尚未调用过，而 la_symbol_ptr 在第一次调用时才绑定，所以在 la_symbol_ptr 中的函数指针指向的还是在 stub_helper 表中</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">- (<span class="keyword">void</span>)touchesBegan:(NSSet&lt;UITouch *&gt; *)touches withEvent:(UIEvent *)event &#123;</span><br><span class="line">    test();<span class="comment">//3.第一次点击屏幕，hook 正常；第二次点击屏幕，就被 dyld_stub_binder 动态绑定换掉了，hook 失效</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>解决办法就是不要调用<code>old_test</code>或者在 hook 之前调用一次<code>test</code>提前动态绑定。 : )</p>
-<p>当利用 fishhook 替换系统的动态库函数实现（例如<code>printf</code>），如果是第一次 hook，会通过<code>_dyld_register_func_for_add_image</code>注册回调来重绑定 hook 实现。虽然在主执行文件中系统函数还是指向的是桩代码，但系统的动态库 Mach-O 中的 la_symbol_ptr 表是会 <strong>prebind</strong> 的（fInSharedCache-&gt;doBindJustLazies），回调从主执行文件开始，所以问题不大。</p>
+<p>当利用 fishhook 替换系统的动态库函数实现（例如<code>printf</code>），如果是第一次 hook，会通过<code>_dyld_register_func_for_add_image</code>注册回调来重绑定 hook 实现。虽然在主执行文件中系统函数还是指向的是桩代码，但系统的动态库 Mach-O 中的<code>la_symbol_ptr</code>表是会 <strong>prebind</strong> 的（<code>fInSharedCache-&gt;doBindJustLazies</code>），回调从主执行文件开始，所以问题不大。</p>
 ]]></content>
       <categories>
         <category>iOS基础</category>
