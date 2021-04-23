@@ -56,11 +56,11 @@
 </tr>
 <tr>
 <td>__TEXT,__const</td>
-<td>可执行文件的常规常量数据，<strong>待研究</strong></td>
+<td><strong>全局</strong>的<strong>不论是否初始化</strong>的<strong>不可变</strong>的 C <strong>对象</strong>，以及<strong>全局</strong>的<strong>未初始化</strong>的<strong>不可变</strong>的 C/CFString/OC <strong>指针</strong>，表中按数据类型大小依次存储。如 <code>int const p = 1, char const p = &#39;A&#39;, NSString *const name;</code>，存储为<code>0x01000000 0x41 0x0000000000000000</code></td>
 </tr>
 <tr>
 <td>__TEXT,__ustring</td>
-<td>非英文字符串转 Unicode 编码，以 0x0000 为结束符</td>
+<td>非 ASCII 表可对应的字符串转 Unicode 编码，以 0x0000 为结束符</td>
 </tr>
 <tr>
 <td>__TEXT,__entitlements</td>
@@ -92,7 +92,7 @@
 </tr>
 <tr>
 <td>__DATA,__const</td>
-<td>需要重定位的常量数据（例如，char * const p = “foo”），<strong>待研究</strong></td>
+<td><strong>全局</strong>的<strong>已初始化</strong>的<strong>不可变</strong>的 C/CFString <strong>指针</strong>，表中按指针大小依次存储。如<code>int *const j = &amp;k, char *const p = &quot;foo&quot;, NSString * const name = @&quot;name&quot;</code>，存储具体数据地址</td>
 </tr>
 <tr>
 <td>__DATA,__cfstring<a href="#\_\_DATA,\_\_cfstring"><sup>[5]</sup></a></td>
@@ -152,15 +152,19 @@
 </tr>
 <tr>
 <td>__DATA,__data</td>
-<td><a href="#\_protocol_t">protocol_t</a> 结构体对象表</td>
+<td><strong>全局</strong>的<strong>已初始化</strong>的<strong>可变</strong>的 C <strong>对象</strong> ，和<strong>全局</strong>的<strong>已初始化</strong>的<strong>可变</strong>的 C/CFString <strong>指针</strong>，按初始化顺序排序。（按 8 字节对齐，并以 8 字节的 <code>0x00</code> 按文件区分，猜的），还有 <a href="#\_protocol_t">protocol_t</a> 结构体对象</td>
+</tr>
+<tr>
+<td>__DATA,__common</td>
+<td><strong>全局</strong>的<strong>未初始化</strong>的<strong>可变</strong>的 C <strong>对象</strong> ，和<strong>全局</strong>的<strong>未初始化</strong>的<strong>可变</strong>的 C/CFString/OC <strong>指针</strong></td>
 </tr>
 <tr>
 <td>Dynamic Loader Info</td>
 <td>Rebase Info、Binding Info、Weak Binding Info、Lazy Binding Info、Export Info</td>
 </tr>
 <tr>
-<td>Function Starts</td>
-<td></td>
+<td>Function Starts<a href="#Function Starts"><sup>[6]</sup></a></td>
+<td>__TEXT,__text 中函数的布局，以 uleb128 存储，section 中第一个值为第一个函数的基于 text section 首地址的偏移量；其余的值为当前函数首地址与上一个函数首地址的偏移量，即上一个函数的大小；可以用来确定内存地址所在函数体（例如：崩溃日志符号化、lldb 中打印地址所在函数汇编等等）</td>
 </tr>
 <tr>
 <td>Data in Code Entries</td>
@@ -219,11 +223,14 @@
 <p>查看当前 Mach-O 所有 external 符号：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">nm -ngm &lt;path&gt;</span><br></pre></td></tr></table></figure>
 
+<p>查看当前 Mach-O Dynamic Loader Info 符号信息：</p>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line">xcrun dyldinfo -rebase -bind -lazy_bind &lt;path&gt;</span><br></pre></td></tr></table></figure>
+
 <p>查找当前 Mach-O 是否包含某符号 <a href="#nm -nm <path> | grep 符号">例子</a>：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">nm -nm &lt;path&gt; | grep 符号</span><br></pre></td></tr></table></figure>
 
 <p>查看函数对应汇编代码 <a href="#otool <path> -Vt -p 函数符号">例子</a>：</p>
-<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//注意这里是大写的 V，不是小写；大写的 V 将会打印出符号指针的描述</span></span><br><span class="line">otool &lt;path&gt; -Vt -p 函数符号</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="code"><pre><span class="line"><span class="comment">//注意这里是大写的 V，不是小写；大写的 V 将会打印出符号指针的描述</span></span><br><span class="line">otool &lt;path&gt; -Vt -p 函数符号</span><br><span class="line"><span class="comment">//另：lldb 中打印内存地址所在函数汇编代码</span></span><br><span class="line">(lldb) dis -a <span class="number">0x12345678</span>或函数符号</span><br></pre></td></tr></table></figure>
 
 <p>查看当前 Mach-O Header：</p>
 <figure class="highlight c"><table><tr><td class="code"><pre><span class="line">otool &lt;path&gt; -hv</span><br></pre></td></tr></table></figure>
@@ -297,6 +304,7 @@
 <li><em>[3]<a href="http://satanwoo.github.io/2017/06/13/Macho-1/" target="_blank" rel="noopener">深入剖析Macho (1)</a></em></li>
 <li><em>[4]<a href="http://satanwoo.github.io/2017/06/29/Macho-2/" target="_blank" rel="noopener">深入理解Macho文件（二）- 消失的__OBJC段与新生的__DATA段</a></em></li>
 <li><em>[5]<a href="https://stackoverflow.com/questions/4320458/what-encoding-do-strings-found-in-the-mach-o-data-segment-cfstring-section" target="_blank" rel="noopener">What encoding do strings found in the Mach-O __DATA segment, __cfstring section use?</a></em><span id="\_\_DATA,\_\_cfstring"> </span></li>
+<li><em>[6]<a href="https://stackoverflow.com/questions/9602438/mach-o-file-lc-function-starts-load-command/#14422897" target="_blank" rel="noopener">Mach-O file LC_FUNCTION_STARTS load command</a></em><span id="Function Starts"> </span></li>
 </ul>
 ]]></content>
       <categories>
